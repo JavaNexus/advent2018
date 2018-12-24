@@ -18,7 +18,7 @@ public class BattleTest {
 
     @Test
     public void testGetResult() throws Exception {
-        boardParser.parseInput("day15_simple.input");
+        boardParser.parseInput("day15_path.input");//simple
 
         Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
         battle.printMap();

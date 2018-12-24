@@ -69,7 +69,8 @@ public class Battle {
 
     public Tile getTile(int x, int y) {
         if (x < 0 || y < 0 || x >= board.length || y >= board.length) {
-            throw new IllegalArgumentException(String.format("Point [%d, %d] is outside the board", x, y));
+            String exceptionMessage = String.format("Point [%d, %d] is outside the board: %d", x, y, board.length);
+            throw new IllegalArgumentException(exceptionMessage);
         }
 
         return board[x][y];
@@ -105,13 +106,16 @@ public class Battle {
     }
 
     private List<PathTile> getPathTiles(int srcX, int srcY) {
-        final int maxDistance = 2 * board.length + 1;
+        final int maxDistance = board.length * board.length + 1;
 
         List<PathTile> unvisitedTiles = new ArrayList<>(board.length * board.length);
         iterateOverTracks(
                 (x, y) -> {
-                    int distance = (x == srcX && y == srcY ? 0 : maxDistance);
-                    unvisitedTiles.add(new PathTile(board[x][y], distance));
+                    Tile tile = board[x][y];
+                    if (tile.isEmpty()) {
+                        int distance = (x == srcX && y == srcY ? 0 : maxDistance);
+                        unvisitedTiles.add(new PathTile(tile, distance));
+                    }
                 },
                 (y) -> {});
 
