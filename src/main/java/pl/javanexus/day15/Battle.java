@@ -1,9 +1,6 @@
 package pl.javanexus.day15;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -70,8 +67,59 @@ public class Battle {
                 .collect(Collectors.toList());
     }
 
+    public Tile getTile(int x, int y) {
+        if (x < 0 || y < 0 || x >= board.length || y >= board.length) {
+            throw new IllegalArgumentException(String.format("Point [%d, %d] is outside the board", x, y));
+        }
+
+        return board[x][y];
+    }
+
+    public void calculateDistance(Tile from, List<Tile> to) {
+        final List<PathTile> unvisitedTiles = getPathTiles(from.getX(), from.getY());
+        final Map<Tile, PathTile> mapping = unvisitedTiles.stream()
+                .collect(Collectors.toMap(PathTile::getTile, pathTile -> pathTile));
+
+        boolean hasVisitedAllReachableTile = false;
+        while (!hasVisitedAllReachableTile) {
+            unvisitedTiles.sort(Comparator.comparingInt(PathTile::getDistance));
+
+            PathTile currentTile = unvisitedTiles.get(0);//get tile with min distance
+
+            List<Tile> nextStepsOnPath = getEmptyAdjacentTiles(from.getX(), from.getY());
+            nextStepsOnPath.stream()
+                    .map(mapping::get)
+                    .filter(pathTile -> !pathTile.isVisited())
+                    .forEach(pathTile -> {
+                        int newDistance = currentTile.getDistance() + 1;
+                        if (newDistance < pathTile.getDistance()) {
+                            pathTile.setDistance(newDistance);
+                        }
+                    });
+
+            unvisitedTiles.remove(currentTile);
+            currentTile.setVisited(true);
+
+            hasVisitedAllReachableTile = nextStepsOnPath.isEmpty();
+        }
+    }
+
+    private List<PathTile> getPathTiles(int srcX, int srcY) {
+        final int maxDistance = 2 * board.length + 1;
+
+        List<PathTile> unvisitedTiles = new ArrayList<>(board.length * board.length);
+        iterateOverTracks(
+                (x, y) -> {
+                    int distance = (x == srcX && y == srcY ? 0 : maxDistance);
+                    unvisitedTiles.add(new PathTile(board[x][y], distance));
+                },
+                (y) -> {});
+
+        return unvisitedTiles;
+    }
+
     private boolean isReachable(Tile from, Tile to) {
-        // TODO: 2018-12-23 implement A*
+        // TODO: 2018-12-23 implement path finding
         throw new RuntimeException("Not implemented yet");
     }
 

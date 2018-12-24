@@ -14,26 +14,26 @@ public class BoardParser {
     enum TileSymbol {
         ELF('E') {
             @Override
-            public Tile createTile() {
-                return new Tile(new Unit(Unit.UnitType.ELF), getSymbol());
+            public Tile createTile(int x, int y) {
+                return new Tile(x, y, getSymbol(), new Unit(Unit.UnitType.ELF));
             }
         },
         GOBLIN('G') {
             @Override
-            public Tile createTile() {
-                return new Tile(new Unit(Unit.UnitType.GOBLIN), getSymbol());
+            public Tile createTile(int x, int y) {
+                return new Tile(x, y, getSymbol(), new Unit(Unit.UnitType.GOBLIN));
             }
         },
         ROCK('#') {
             @Override
-            public Tile createTile() {
-                return new Tile(true, getSymbol());
+            public Tile createTile(int x, int y) {
+                return new Tile(x, y, getSymbol(), true);
             }
         },
         EMPTY('.') {
             @Override
-            public Tile createTile() {
-                return new Tile(false, getSymbol());
+            public Tile createTile(int x, int y) {
+                return new Tile(x, y, getSymbol(), false);
             }
         };
 
@@ -58,7 +58,7 @@ public class BoardParser {
             return symbol;
         }
 
-        public abstract Tile createTile();
+        public abstract Tile createTile(int x, int y);
     }
 
     private final InputReader inputReader = new InputReader();
@@ -72,15 +72,15 @@ public class BoardParser {
     public void parseInput(String fileName) throws IOException {
         this.allUnits = new LinkedList<>();
 
-        List<Tile[]> tiles = inputReader.readValues(fileName, (index, line) -> {
+        List<Tile[]> tiles = inputReader.readValues(fileName, (y, line) -> {
             Tile[] row = new Tile[line.length()];
             char[] symbols = line.toCharArray();
-            for (int i = 0; i < symbols.length; i++) {
-                row[i] = TileSymbol.getTileSymbol(symbols[i]).createTile();
-                Unit unit = row[i].getUnit();
+            for (int x = 0; x < symbols.length; x++) {
+                row[x] = TileSymbol.getTileSymbol(symbols[x]).createTile(x, y);
+                Unit unit = row[x].getUnit();
                 if (unit != null) {
-                    unit.setX(i);
-                    unit.setY(index);
+                    unit.setX(x);
+                    unit.setY(y);
 
                     allUnits.add(unit);
                 }
