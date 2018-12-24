@@ -1,0 +1,10 @@
+aaaaa.cccccccccccccc
+aAaaa.cccccccccccccc
+aaaddecccccccccccccc
+aadddeccCccccccccccc
+..dDdeeccccccccccccc
+bb.deEeecccccccccccc
+bBb.eeee............
+bbb.eeefffffffffffff
+bbb.eeffffffffffffff
+bbb.ffffFfffffffffff

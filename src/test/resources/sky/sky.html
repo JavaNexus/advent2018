@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="alignedStars.js"></script>
+    <!-- testStars -->
+    <!-- alignedStars -->
+</head>
+<body>
+
+<canvas id="myCanvas" width="750" height="500" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+
+var ox = 0;
+var oy = 0;
+
+function printStars(ctx) {
+    for (i = 0; i < stars.length; i++) {
+        var s = stars[i];
+		ctx.beginPath();
+		ctx.arc(ox + 2* s.x, ox + 2 * s.y, 2, 0, 2 * Math.PI);
+		ctx.stroke();
+    }
+}
+
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+printStars(ctx);
+
+</script>
+
+</body>
+</html>

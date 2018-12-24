@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="cells.js"></script>
+</head>
+<body>
+
+<canvas id="myCanvas" width="900" height="900" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+
+var colors = [
+'#ff0000',
+'#ff4000',
+'#ff8000',
+'#ffbf00',
+'#ffff00',
+'#bfff00',
+'#80ff00',
+'#40ff00',
+'#00ff00',
+'#00ff40',
+'#00ff80',
+'#00ffbf',
+]
+
+var size = 3
+
+function printGrid(ctx) {
+    for (i = 0; i < grid.length; i++) {
+        var p = grid[i];
+        //console.log(p.x + ", " + p.y);
+
+		ctx.fillStyle = colors[p.p + 5];
+		ctx.fillRect(p.x * size, p.y * size, size, size);
+		ctx.stroke();
+    }
+}
+
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+printGrid(ctx);
+
+</script>
+
+</body>
+</html>
