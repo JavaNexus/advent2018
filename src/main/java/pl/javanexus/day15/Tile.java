@@ -30,7 +30,7 @@ public class Tile {
 
     @Override
     public String toString() {
-        return symbol;
+        return String.format("%s [%d, %d]", symbol, x, y);
     }
 
     @Override

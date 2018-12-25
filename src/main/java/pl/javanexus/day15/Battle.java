@@ -11,6 +11,9 @@ public class Battle {
     private final List<Unit> allUnits;
     private final Map<Unit.UnitType, List<Unit>> unitsByType;
 
+    private final int maxDistance;
+    private final int minDistance;
+
     public Battle(Tile[][] board, List<Unit> allUnits) {
         this.board = board;
         this.allUnits = allUnits;
@@ -25,11 +28,13 @@ public class Battle {
                 return units;
             });
         }
+        this.minDistance = 0;
+        this.maxDistance = board.length * board.length + 1;
     }
 
     public void printMap() {
         iterateOverTracks(
-                (x, y) -> System.out.printf("%s", board[x][y]),
+                (x, y) -> System.out.printf("%s", board[x][y].getSymbol()),
                 (y) -> System.out.printf("\n"));
     }
 
@@ -76,45 +81,50 @@ public class Battle {
         return board[x][y];
     }
 
-    public void calculateDistance(Tile from, List<Tile> to) {
+    public List<PathTile> calculateDistance(Tile from, List<Tile> to) {
         final List<PathTile> unvisitedTiles = getPathTiles(from.getX(), from.getY());
+        final List<PathTile> visitedTargets = new ArrayList<>();
         final Map<Tile, PathTile> mapping = unvisitedTiles.stream()
                 .collect(Collectors.toMap(PathTile::getTile, pathTile -> pathTile));
 
         boolean hasVisitedAllReachableTile = false;
         while (!hasVisitedAllReachableTile) {
-            unvisitedTiles.sort(Comparator.comparingInt(PathTile::getDistance));
-
-            PathTile currentTile = unvisitedTiles.get(0);//get tile with min distance
-
-            List<Tile> nextStepsOnPath = getEmptyAdjacentTiles(from.getX(), from.getY());
+            PathTile currentPathTile = unvisitedTiles.stream()
+                    .min(Comparator.comparingInt(PathTile::getDistance))
+                    .get();
+            Tile currentTile = currentPathTile.getTile();
+            List<Tile> nextStepsOnPath = getEmptyAdjacentTiles(currentTile.getX(), currentTile.getY());
             nextStepsOnPath.stream()
                     .map(mapping::get)
                     .filter(pathTile -> !pathTile.isVisited())
                     .forEach(pathTile -> {
-                        int newDistance = currentTile.getDistance() + 1;
+                        int newDistance = currentPathTile.getDistance() + 1;
                         if (newDistance < pathTile.getDistance()) {
                             pathTile.setDistance(newDistance);
                         }
                     });
 
-            unvisitedTiles.remove(currentTile);
-            currentTile.setVisited(true);
+            unvisitedTiles.remove(currentPathTile);
+            currentPathTile.setVisited(true);
+            if (to.contains(currentTile)) {
+                visitedTargets.add(currentPathTile);
+            }
 
-            hasVisitedAllReachableTile = nextStepsOnPath.isEmpty();
+            hasVisitedAllReachableTile = unvisitedTiles.isEmpty() || nextStepsOnPath.isEmpty();
         }
+
+        return visitedTargets;
     }
 
     private List<PathTile> getPathTiles(int srcX, int srcY) {
-        final int maxDistance = board.length * board.length + 1;
-
         List<PathTile> unvisitedTiles = new ArrayList<>(board.length * board.length);
         iterateOverTracks(
                 (x, y) -> {
                     Tile tile = board[x][y];
                     if (tile.isEmpty()) {
-                        int distance = (x == srcX && y == srcY ? 0 : maxDistance);
-                        unvisitedTiles.add(new PathTile(tile, distance));
+                        unvisitedTiles.add(new PathTile(tile, maxDistance));
+                    } else if (x == srcX && y == srcY) {
+                        unvisitedTiles.add(new PathTile(tile, minDistance));
                     }
                 },
                 (y) -> {});
@@ -129,22 +139,19 @@ public class Battle {
 
     private List<Tile> getEmptyAdjacentTiles(int ox, int oy) {
         List<Tile> tiles = new LinkedList<>();
-        for (int y = getPrevious(oy, 0); y < getNext(oy, board.length - 1); y++) {
-            for (int x = getPrevious(ox, 0); x < getNext(ox, board.length - 1); x++) {
-                if (board[x][y].isEmpty()) {
-                    tiles.add(board[x][y]);
-                }
-            }
-        }
+        getTileInRange(ox - 1, oy).ifPresent(tiles::add);
+        getTileInRange(ox + 1, oy).ifPresent(tiles::add);
+        getTileInRange(ox, oy - 1).ifPresent(tiles::add);
+        getTileInRange(ox, oy + 1).ifPresent(tiles::add);
 
         return tiles;
     }
 
-    private int getPrevious(int center, int minValue) {
-        return center == minValue ? minValue : center - 1;
-    }
-
-    private int getNext(int center, int maxValue) {
-        return center == maxValue ? center = maxValue : center + 1;
+    private Optional<Tile> getTileInRange(int x, int y) {
+        if (x >= 0 && x < board.length && y >= 0 && y < board.length && board[x][y].isEmpty()) {
+            return Optional.of(board[x][y]);
+        } else {
+            return Optional.empty();
+        }
     }
 }

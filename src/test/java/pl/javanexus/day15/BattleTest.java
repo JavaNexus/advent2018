@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,7 +23,7 @@ public class BattleTest {
 
         Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
         battle.printMap();
-        battle.calculateDistance(
+        List<PathTile> reachableTargets = battle.calculateDistance(
                 battle.getTile(1, 1),
                 Arrays.asList(
                         battle.getTile(3, 1),
@@ -32,6 +33,17 @@ public class BattleTest {
                         battle.getTile(1, 3),
                         battle.getTile(3, 3)
                 ));
+
+        assertEquals(4, reachableTargets.size());
+        reachableTargets.stream()
+                .forEach(pathTile -> {
+                    Tile tile = pathTile.getTile();
+                    if (tile.getX() == 3 && tile.getY() == 3) {
+                        assertEquals(4, pathTile.getDistance());
+                    } else {
+                        assertEquals(2, pathTile.getDistance());
+                    }
+                });
 
 //        assertEquals(-1, battle.getResult());
     }
