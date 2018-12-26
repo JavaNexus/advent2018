@@ -34,12 +34,12 @@ public class Battle {
     }
 
     public void printMap() {
-        iterateOverTracks(
+        iterateOverBoard(
                 (x, y) -> System.out.printf("%s", board[x][y].getSymbol()),
                 (y) -> System.out.printf("\n"));
     }
 
-    private void iterateOverTracks(BiConsumer<Integer, Integer> cellConsumer, Consumer<Integer> rowConsumer) {
+    private void iterateOverBoard(BiConsumer<Integer, Integer> cellConsumer, Consumer<Integer> rowConsumer) {
         for (int x = 0; x < board.length; x++) {
             for (int y = 0; y < board[x].length; y++) {
                 cellConsumer.accept(x, y);
@@ -50,40 +50,50 @@ public class Battle {
 
     public int getResult() {
         // TODO: 2018-12-23 while there are units with targets
-        executeTurn();
+        boolean hasAnyUnitMoved;
+//        do {
+//        } while (hasAnyUnitMoved);
+
+        printMap();
+        for (int i = 0; i < 2; i++) {
+            hasAnyUnitMoved = executeTurn();
+            printMap();
+        }
+
         return -1;
     }
 
-    private void executeTurn() {
-        allUnits.stream().sorted((unit1, unit2) -> {
-            int dy = unit1.getY() - unit2.getY();
-            return dy == 0 ? unit1.getX() - unit2.getX() : dy;
-        }).forEach(unit -> executeTurn(unit));
+    private boolean executeTurn() {
+        return allUnits.stream()
+                .sorted()
+                .map(this::executeTurn)
+                .reduce(Boolean.FALSE, (left, right) -> left || right);
     }
 
-    private void executeTurn(Unit unit) {
+    private boolean executeTurn(Unit unit) {
         List<Tile> enemiesInRange = getEnemyAdjacentTiles(unit);
         if (enemiesInRange.isEmpty()) {
             moveTowardNearestEnemy(unit);
+            return true;
+        } else {
+            // TODO: 25.12.2018 attack enemy in range
+            return false;
         }
-        // TODO: 25.12.2018 attack enemy in range
     }
 
     private void moveTowardNearestEnemy(Unit unit) {
-        final Tile tile = board[unit.getX()][unit.getY()];
+        final Tile tile = getTile(unit.getX(), unit.getY());
 
-        List<Tile> destinations = selectReachableDestinations(tile, unit.getUnitType().getEnemyType());
+        final List<Tile> destinations = selectReachableDestinations(unit.getUnitType().getEnemyType());
         calculateDistance(tile, destinations).stream()
                 .sorted()
-                .findFirst().ifPresent(selectedDestination -> {
-            unit.move(tile, selectedDestination.getTile());
-        });
+                .findFirst()
+                .ifPresent(selectedDestination -> unit.move(tile, selectedDestination.getFirstTileOnPath()));
     }
 
-    private List<Tile> selectReachableDestinations(Tile unitTile, Unit.UnitType targetType) {
+    private List<Tile> selectReachableDestinations(Unit.UnitType targetType) {
         return unitsByType.get(targetType).stream()
                 .flatMap(enemy -> getEmptyAdjacentTiles(enemy.getX(), enemy.getY()).stream())
-                .filter(enemyAdjacentTile -> isReachable(unitTile, enemyAdjacentTile))
                 .collect(Collectors.toList());
     }
 
@@ -93,7 +103,7 @@ public class Battle {
             throw new IllegalArgumentException(exceptionMessage);
         }
 
-        return board[x][y];
+        return board[y][x];
     }
 
     public List<PathTile> calculateDistance(Tile from, List<Tile> to) {
@@ -121,7 +131,7 @@ public class Battle {
 
             unvisitedTiles.remove(currentPathTile);
             currentPathTile.setVisited(true);
-            if (to.contains(currentTile)) {
+            if (to.contains(currentTile) && currentPathTile.getDistance() < maxDistance) {
                 visitedTargets.add(currentPathTile);
             }
 
@@ -136,22 +146,26 @@ public class Battle {
     }
 
     private void populatePath(PathTile to, Map<Tile, PathTile> mapping) {
-        Optional<PathTile> nextTileOnPath = Optional.of(to);
-        while (nextTileOnPath.isPresent()) {
-            Tile tile = nextTileOnPath.map(PathTile::getTile).get();
-            nextTileOnPath = getAdjacentTiles(tile.getY(), tile.getX()).stream()
+        PathTile nextTileOnPath = to;
+        while (nextTileOnPath.getDistance() > minDistance) {
+            Tile tile = nextTileOnPath.getTile();
+            nextTileOnPath = getAdjacentTiles(tile.getX(), tile.getY(),
+                    (adjacentTile) -> adjacentTile.isEmpty() || Optional.ofNullable(mapping.get(adjacentTile))
+                            .map(PathTile::getDistance)
+                            .filter(distance -> distance == minDistance).isPresent()
+                    ).stream()
                     .map(mapping::get)
-                    .min(Comparator.comparingInt(PathTile::getDistance));
-            nextTileOnPath
-                    .ifPresent(pathTile -> to.getPath().add(pathTile.getTile()));
+                    .min(Comparator.comparingInt(PathTile::getDistance))
+                    .get();
+            to.getPath().add(nextTileOnPath.getTile());
         }
     }
 
     private List<PathTile> getPathTiles(int srcX, int srcY) {
         List<PathTile> unvisitedTiles = new ArrayList<>(board.length * board.length);
-        iterateOverTracks(
+        iterateOverBoard(
                 (x, y) -> {
-                    Tile tile = board[x][y];
+                    Tile tile = getTile(x, y);
                     if (tile.isEmpty()) {
                         unvisitedTiles.add(new PathTile(tile, maxDistance));
                     } else if (x == srcX && y == srcY) {
@@ -163,25 +177,15 @@ public class Battle {
         return unvisitedTiles;
     }
 
-    private boolean isReachable(Tile from, Tile to) {
-        // TODO: 2018-12-23 implement path finding
-        throw new RuntimeException("Not implemented yet");
-    }
-
-    private List<Tile> getAdjacentTiles(int ox, int oy) {
-        return getAdjacentTiles(ox, oy, (tile) -> true);
-    }
-
     private List<Tile> getEmptyAdjacentTiles(int ox, int oy) {
         return getAdjacentTiles(ox, oy, Tile::isEmpty);
     }
 
     private List<Tile> getEnemyAdjacentTiles(Unit selectedUnit) {
-        return getAdjacentTiles(selectedUnit.getX(), selectedUnit.getY(), (tile) -> {
-            return Optional.ofNullable(tile.getUnit())
-                    .filter(unit -> unit.getUnitType() == selectedUnit.getUnitType().getEnemyType())
-                    .isPresent();
-        });
+        return getAdjacentTiles(selectedUnit.getX(), selectedUnit.getY(),
+                (tile) -> Optional.ofNullable(tile.getUnit())
+                        .filter(unit -> unit.getUnitType() == selectedUnit.getUnitType().getEnemyType())
+                        .isPresent());
     }
 
     private List<Tile> getAdjacentTiles(int ox, int oy, Predicate<Tile> filter) {
@@ -196,7 +200,7 @@ public class Battle {
 
     private Optional<Tile> getTileInRange(int x, int y) {
         if (x >= 0 && x < board.length && y >= 0 && y < board.length) {
-            return Optional.of(board[x][y]);
+            return Optional.of(getTile(x, y));
         } else {
             return Optional.empty();
         }

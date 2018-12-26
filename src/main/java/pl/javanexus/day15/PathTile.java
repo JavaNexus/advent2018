@@ -19,6 +19,10 @@ public class PathTile implements Comparable {
         this.distance = distance;
     }
 
+    public Tile getFirstTileOnPath() {
+        return path.size() == 1 ? tile : path.get(0);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

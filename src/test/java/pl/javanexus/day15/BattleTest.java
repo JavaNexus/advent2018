@@ -19,7 +19,15 @@ public class BattleTest {
 
     @Test
     public void testGetResult() throws Exception {
-        boardParser.parseInput("day15_path.input");//simple
+        boardParser.parseInput("day15_simple.input");
+
+        Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
+        battle.getResult();
+    }
+
+    @Test
+    public void testCalculateDistance() throws Exception {
+        boardParser.parseInput("day15_path.input");
 
         Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
         battle.printMap();
@@ -44,7 +52,5 @@ public class BattleTest {
                         assertEquals(2, pathTile.getDistance());
                     }
                 });
-
-//        assertEquals(-1, battle.getResult());
     }
 }
