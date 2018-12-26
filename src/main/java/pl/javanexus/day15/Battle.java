@@ -3,6 +3,7 @@ package pl.javanexus.day15;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Battle {
@@ -56,13 +57,27 @@ public class Battle {
     private void executeTurn() {
         allUnits.stream().sorted((unit1, unit2) -> {
             int dy = unit1.getY() - unit2.getY();
-            return dy == 0 ?unit1.getX() - unit2.getX() : dy;
+            return dy == 0 ? unit1.getX() - unit2.getX() : dy;
         }).forEach(unit -> executeTurn(unit));
     }
 
     private void executeTurn(Unit unit) {
-        //isInRange()
-        selectReachableDestinations(board[unit.getX()][unit.getY()], unit.getUnitType().getEnemy());
+        List<Tile> enemiesInRange = getEnemyAdjacentTiles(unit);
+        if (enemiesInRange.isEmpty()) {
+            moveTowardNearestEnemy(unit);
+        }
+        // TODO: 25.12.2018 attack enemy in range
+    }
+
+    private void moveTowardNearestEnemy(Unit unit) {
+        final Tile tile = board[unit.getX()][unit.getY()];
+
+        List<Tile> destinations = selectReachableDestinations(tile, unit.getUnitType().getEnemyType());
+        calculateDistance(tile, destinations).stream()
+                .sorted()
+                .findFirst().ifPresent(selectedDestination -> {
+            unit.move(tile, selectedDestination.getTile());
+        });
     }
 
     private List<Tile> selectReachableDestinations(Tile unitTile, Unit.UnitType targetType) {
@@ -113,7 +128,23 @@ public class Battle {
             hasVisitedAllReachableTile = unvisitedTiles.isEmpty() || nextStepsOnPath.isEmpty();
         }
 
+        for (PathTile target : visitedTargets) {
+            populatePath(target, mapping);
+        }
+
         return visitedTargets;
+    }
+
+    private void populatePath(PathTile to, Map<Tile, PathTile> mapping) {
+        Optional<PathTile> nextTileOnPath = Optional.of(to);
+        while (nextTileOnPath.isPresent()) {
+            Tile tile = nextTileOnPath.map(PathTile::getTile).get();
+            nextTileOnPath = getAdjacentTiles(tile.getY(), tile.getX()).stream()
+                    .map(mapping::get)
+                    .min(Comparator.comparingInt(PathTile::getDistance));
+            nextTileOnPath
+                    .ifPresent(pathTile -> to.getPath().add(pathTile.getTile()));
+        }
     }
 
     private List<PathTile> getPathTiles(int srcX, int srcY) {
@@ -137,18 +168,34 @@ public class Battle {
         throw new RuntimeException("Not implemented yet");
     }
 
+    private List<Tile> getAdjacentTiles(int ox, int oy) {
+        return getAdjacentTiles(ox, oy, (tile) -> true);
+    }
+
     private List<Tile> getEmptyAdjacentTiles(int ox, int oy) {
+        return getAdjacentTiles(ox, oy, Tile::isEmpty);
+    }
+
+    private List<Tile> getEnemyAdjacentTiles(Unit selectedUnit) {
+        return getAdjacentTiles(selectedUnit.getX(), selectedUnit.getY(), (tile) -> {
+            return Optional.ofNullable(tile.getUnit())
+                    .filter(unit -> unit.getUnitType() == selectedUnit.getUnitType().getEnemyType())
+                    .isPresent();
+        });
+    }
+
+    private List<Tile> getAdjacentTiles(int ox, int oy, Predicate<Tile> filter) {
         List<Tile> tiles = new LinkedList<>();
-        getTileInRange(ox - 1, oy).ifPresent(tiles::add);
-        getTileInRange(ox + 1, oy).ifPresent(tiles::add);
-        getTileInRange(ox, oy - 1).ifPresent(tiles::add);
-        getTileInRange(ox, oy + 1).ifPresent(tiles::add);
+        getTileInRange(ox - 1, oy).filter(filter).ifPresent(tiles::add);
+        getTileInRange(ox + 1, oy).filter(filter).ifPresent(tiles::add);
+        getTileInRange(ox, oy - 1).filter(filter).ifPresent(tiles::add);
+        getTileInRange(ox, oy + 1).filter(filter).ifPresent(tiles::add);
 
         return tiles;
     }
 
     private Optional<Tile> getTileInRange(int x, int y) {
-        if (x >= 0 && x < board.length && y >= 0 && y < board.length && board[x][y].isEmpty()) {
+        if (x >= 0 && x < board.length && y >= 0 && y < board.length) {
             return Optional.of(board[x][y]);
         } else {
             return Optional.empty();

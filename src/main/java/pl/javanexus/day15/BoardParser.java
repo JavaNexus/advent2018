@@ -15,25 +15,25 @@ public class BoardParser {
         ELF('E') {
             @Override
             public Tile createTile(int x, int y) {
-                return new Tile(x, y, getSymbol(), new Unit(Unit.UnitType.ELF));
+                return new Tile(x, y, new Unit(Unit.UnitType.ELF));
             }
         },
         GOBLIN('G') {
             @Override
             public Tile createTile(int x, int y) {
-                return new Tile(x, y, getSymbol(), new Unit(Unit.UnitType.GOBLIN));
+                return new Tile(x, y, new Unit(Unit.UnitType.GOBLIN));
             }
         },
         ROCK('#') {
             @Override
             public Tile createTile(int x, int y) {
-                return new Tile(x, y, getSymbol(), true);
+                return new Tile(x, y, true);
             }
         },
         EMPTY('.') {
             @Override
             public Tile createTile(int x, int y) {
-                return new Tile(x, y, getSymbol(), false);
+                return new Tile(x, y, false);
             }
         };
 

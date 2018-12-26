@@ -8,18 +8,18 @@ public class Unit {
     enum UnitType {
         ELF {
             @Override
-            public UnitType getEnemy() {
+            public UnitType getEnemyType() {
                 return GOBLIN;
             }
         },
         GOBLIN {
             @Override
-            public UnitType getEnemy() {
+            public UnitType getEnemyType() {
                 return ELF;
             }
         };
 
-        public abstract UnitType getEnemy();
+        public abstract UnitType getEnemyType();
     }
 
     public static final int MAX_HP = 200;
@@ -36,19 +36,10 @@ public class Unit {
         this.unitType = unitType;
     }
 
-    public void executeTurn() {
-
-    }
-
-    private void selectTargetUnit() {
-
-    }
-
-    private void move() {
-
-    }
-
-    private void attack() {
-
+    public void move(Tile from, Tile to) {
+        from.setUnit(null);
+        to.setUnit(this);
+        setX(to.getX());
+        setY(to.getY());
     }
 }

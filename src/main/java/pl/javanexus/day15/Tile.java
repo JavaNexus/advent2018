@@ -8,19 +8,17 @@ public class Tile {
     private final int x;
     private final int y;
     private final boolean isRock;
-    private final String symbol;
 
     private Unit unit;
 
-    public Tile(int x, int y, char symbol, boolean isRock) {
+    public Tile(int x, int y, boolean isRock) {
         this.x = x;
         this.y = y;
         this.isRock = isRock;
-        this.symbol = String.valueOf(symbol);
     }
 
-    public Tile(int x, int y, char symbol, Unit unit) {
-        this(x, y, symbol, false);
+    public Tile(int x, int y, Unit unit) {
+        this(x, y, false);
         this.unit = unit;
     }
 
@@ -30,7 +28,21 @@ public class Tile {
 
     @Override
     public String toString() {
-        return String.format("%s [%d, %d]", symbol, x, y);
+        return String.format("%s [%d, %d]", getSymbol(), x, y);
+    }
+
+    public char getSymbol() {
+        if (isRock) {
+            return BoardParser.TileSymbol.ROCK.getSymbol();
+        } else if (unit == null) {
+            return BoardParser.TileSymbol.EMPTY.getSymbol();
+        } else if (unit.getUnitType() == Unit.UnitType.ELF) {
+            return BoardParser.TileSymbol.ELF.getSymbol();
+        } else if (unit.getUnitType() == Unit.UnitType.GOBLIN) {
+            return BoardParser.TileSymbol.GOBLIN.getSymbol();
+        } else {
+            throw new IllegalArgumentException(String.format("Unexpected tile state: %d", x, y));
+        }
     }
 
     @Override
