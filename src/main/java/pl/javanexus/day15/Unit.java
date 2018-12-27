@@ -5,8 +5,6 @@ import lombok.Getter;
 public class Unit implements Comparable {
 
     public static final int MIN_HP = 0;
-    public static final int MAX_HP = 200;
-    public static final int MAX_ATTACK = 3;
 
     enum UnitType {
         ELF {
@@ -37,12 +35,12 @@ public class Unit implements Comparable {
     @Getter
     private int hp;
 
-    public Unit(UnitType unitType, int x, int y) {
+    public Unit(UnitType unitType, int x, int y, int initialHp, int attackPower) {
         this.unitType = unitType;
         this.x = x;
         this.y = y;
-        this.hp = MAX_HP;
-        this.attackPower = MAX_ATTACK;
+        this.hp = initialHp;
+        this.attackPower = attackPower;
     }
 
     public void move(Tile from, Tile to) {
@@ -63,6 +61,10 @@ public class Unit implements Comparable {
 
     public boolean isAlive() {
         return hp > MIN_HP;
+    }
+
+    public boolean isDead() {
+        return !isAlive();
     }
 
     @Override

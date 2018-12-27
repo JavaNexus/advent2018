@@ -17,11 +17,6 @@ public class Tile {
         this.isRock = isRock;
     }
 
-    public Tile(int x, int y, Unit unit) {
-        this(x, y, false);
-        this.unit = unit;
-    }
-
     public boolean isEmpty() {
         return !isRock && unit == null;
     }

@@ -4,38 +4,26 @@ import lombok.Getter;
 import pl.javanexus.InputReader;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class BoardParser {
 
     enum TileSymbol {
         ELF('E') {
             @Override
-            public Tile createTile(int x, int y) {
-                return new Tile(x, y, new Unit(Unit.UnitType.ELF, x, y));
+            public Optional<Unit.UnitType> getUnitType() {
+                return Optional.of(Unit.UnitType.ELF);
             }
         },
         GOBLIN('G') {
             @Override
-            public Tile createTile(int x, int y) {
-                return new Tile(x, y, new Unit(Unit.UnitType.GOBLIN, x, y));
+            public Optional<Unit.UnitType> getUnitType() {
+                return Optional.of(Unit.UnitType.GOBLIN);
             }
         },
-        ROCK('#') {
-            @Override
-            public Tile createTile(int x, int y) {
-                return new Tile(x, y, true);
-            }
-        },
-        EMPTY('.') {
-            @Override
-            public Tile createTile(int x, int y) {
-                return new Tile(x, y, false);
-            }
-        };
+        ROCK('#', true),
+        EMPTY('.');
 
         private static final Map<Character, TileSymbol> SYMBOLS = new HashMap<>();
         static {
@@ -49,19 +37,40 @@ public class BoardParser {
         }
 
         private final char symbol;
+        private final boolean isRock;
 
         TileSymbol(char symbol) {
+            this(symbol, false);
+        }
+
+        TileSymbol(char symbol, boolean isRock) {
             this.symbol = symbol;
+            this.isRock = isRock;
         }
 
         public char getSymbol() {
             return symbol;
         }
 
-        public abstract Tile createTile(int x, int y);
+        public Optional<Unit.UnitType> getUnitType() {
+            return Optional.empty();
+        }
+
+        public Tile createTile(int x, int y) {
+            return new Tile(x, y, isRock);
+        }
     }
 
     private final InputReader inputReader = new InputReader();
+    private final Map<Unit.UnitType, UnitFactory> unitFactory;
+
+    public BoardParser(UnitFactory... unitFactories) {
+        this.unitFactory = Arrays.stream(unitFactories)
+                .collect(Collectors.toMap(factory -> factory.getUnitType(), factory -> factory));
+        for (Unit.UnitType unitType : Unit.UnitType.values()) {
+            unitFactory.computeIfAbsent(unitType, (type) -> new UnitFactory(type));
+        }
+    }
 
     @Getter
     private List<Unit> allUnits;
@@ -76,10 +85,15 @@ public class BoardParser {
             Tile[] row = new Tile[line.length()];
             char[] symbols = line.toCharArray();
             for (int x = 0; x < symbols.length; x++) {
-                row[x] = TileSymbol.getTileSymbol(symbols[x]).createTile(x, y);
-                Unit unit = row[x].getUnit();
-                if (unit != null) {
+                TileSymbol tileSymbol = TileSymbol.getTileSymbol(symbols[x]);
+                row[x] = tileSymbol.createTile(x, y);
+
+                if (tileSymbol.getUnitType().isPresent()) {
+                    UnitFactory unitFactory = this.unitFactory.get(tileSymbol.getUnitType().get());
+                    Unit unit = unitFactory.createUnit(x, y);
+
                     allUnits.add(unit);
+                    row[x].setUnit(unit);
                 }
             }
 

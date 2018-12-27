@@ -12,32 +12,38 @@ public class Battle {
     public Battle(Tile[][] tiles, List<Unit> allUnits) {
         this.board = new Board(tiles);
         this.allUnits = allUnits;
-        this.unitsByType = new HashMap<>();
-        for (Unit unit : allUnits) {
-            unitsByType.compute(unit.getUnitType(), (type, units) -> {
-                if (units == null) {
-                    units = new LinkedList<>();
-                }
-                units.add(unit);
-
-                return units;
-            });
-        }
+        this.unitsByType = groupUnitsByType(allUnits);
     }
 
-    public int getResult() {
-        board.printMap();
+    private Map<Unit.UnitType, List<Unit>> groupUnitsByType(List<Unit> units) {
+        Map<Unit.UnitType, List<Unit>> groupedUnits = new HashMap<>();
+
+        for (Unit unit : units) {
+            groupedUnits.compute(unit.getUnitType(), (type, unitsOfType) -> {
+                if (unitsOfType == null) {
+                    unitsOfType = new LinkedList<>();
+                }
+                unitsOfType.add(unit);
+
+                return unitsOfType;
+            });
+        }
+
+        return groupedUnits;
+    }
+
+    public BattleOutcome calculateOutcome() {
+//        board.printMap();
 
         int turn = 0;
         do {
             executeTurn();
-            System.out.println(" >>> " + turn);
-            board.printMap();
-
+//            System.out.println(" >>> " + turn);
+//            board.printMap();
             turn++;
         } while (haveAllUnitsOfAtLeastOnTypeDied());
 
-        return turn * getHpOfAliveUnits();
+        return new BattleOutcome(turn, allUnits);
     }
 
     private boolean executeTurn() {
@@ -106,9 +112,5 @@ public class Battle {
 
     private boolean isAnyAlive(Unit.UnitType unitType) {
         return unitsByType.get(unitType).stream().filter(Unit::isAlive).findAny().isPresent();
-    }
-
-    private int getHpOfAliveUnits() {
-        return allUnits.stream().filter(Unit::isAlive).mapToInt(Unit::getHp).sum();
     }
 }

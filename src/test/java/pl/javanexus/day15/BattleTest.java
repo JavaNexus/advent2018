@@ -20,11 +20,64 @@ public class BattleTest {
     }
 
     @Test
-    public void testGetResult() throws Exception {
-        boardParser.parseInput("day15_attack.input");//_round23
+    public void testGetResultFromTestInput() throws Exception {
+        boardParser.parseInput("day15_test.input");
 
         Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
-        assertEquals(47 * 590, battle.getResult());
+        assertEquals(239010, battle.calculateOutcome().getResult());
+
+        //1) That's not the right answer; your answer is too low. (You guessed 236440.)
+    }
+
+    @Test
+    public void testGetResultWhenNoElfDies() throws IOException {
+        findMinAttackStrength("day15_test.input");
+        //That's not the right answer; your answer is too high. (You guessed 63826.)
+    }
+
+    private void findMinAttackStrength(String inputFileName) throws IOException {
+        int elfAttackPower = 16;//UnitFactory.DEFAULT_ATTACK + 1;
+
+        boolean hasAnyElfDied;
+        do {
+            BoardParser boardParser = new BoardParser(new UnitFactory(Unit.UnitType.ELF, elfAttackPower++));
+            boardParser.parseInput(inputFileName);
+
+            Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
+            BattleOutcome battleOutcome = battle.calculateOutcome();
+
+            hasAnyElfDied = !battleOutcome.areAllUnitsOfTypeAlive(Unit.UnitType.ELF);
+            System.out.printf("%d : %d, elves: %d, goblins: %d\n",
+                    elfAttackPower - 1,
+                    battleOutcome.getResult(),
+                    battleOutcome.getNumberOfUnitsAlive(Unit.UnitType.ELF),
+                    battleOutcome.getNumberOfUnitsAlive(Unit.UnitType.GOBLIN));
+        } while(hasAnyElfDied);
+    }
+
+    @Test
+    public void testGetResult() throws Exception {
+        BoardParser boardParser = new BoardParser(new UnitFactory(Unit.UnitType.ELF, 8));
+        boardParser.parseInput("day15_attack.input");
+
+        Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
+        assertEquals(46 * 590, battle.calculateOutcome().getResult());
+    }
+
+    @Test
+    public void testGetResult_4() throws Exception {
+        boardParser.parseInput("day15_sample4.input");
+
+        Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
+        assertEquals(54 * 536, battle.calculateOutcome().getResult());
+    }
+
+    @Test
+    public void testGetResult_5() throws Exception {
+        boardParser.parseInput("day15_sample5.input");
+
+        Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
+        assertEquals(20 * 937, battle.calculateOutcome().getResult());
     }
 
     @Test
