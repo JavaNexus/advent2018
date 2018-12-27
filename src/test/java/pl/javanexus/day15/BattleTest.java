@@ -21,10 +21,10 @@ public class BattleTest {
 
     @Test
     public void testGetResult() throws Exception {
-        boardParser.parseInput("day15_move.input");
+        boardParser.parseInput("day15_attack.input");//_round23
 
         Battle battle = new Battle(boardParser.getBoard(), boardParser.getAllUnits());
-        battle.getResult();
+        assertEquals(47 * 590, battle.getResult());
     }
 
     @Test

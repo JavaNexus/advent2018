@@ -26,18 +26,18 @@ public class Battle {
     }
 
     public int getResult() {
-        // TODO: 2018-12-23 while there are units with targets
-        boolean hasAnyUnitMoved;
-//        do {
-//        } while (hasAnyUnitMoved);
-
         board.printMap();
-        for (int i = 0; i < 3; i++) {
-            hasAnyUnitMoved = executeTurn();
-            board.printMap();
-        }
 
-        return -1;
+        int turn = 0;
+        do {
+            executeTurn();
+            System.out.println(" >>> " + turn);
+            board.printMap();
+
+            turn++;
+        } while (haveAllUnitsOfAtLeastOnTypeDied());
+
+        return turn * getHpOfAliveUnits();
     }
 
     private boolean executeTurn() {
@@ -48,14 +48,39 @@ public class Battle {
     }
 
     private boolean executeTurn(Unit unit) {
-        List<Tile> enemiesInRange = board.getEnemyAdjacentTiles(unit);
-        if (enemiesInRange.isEmpty()) {
-            moveTowardNearestEnemy(unit);
-            return true;
-        } else {
-            // TODO: 25.12.2018 attack enemy in range
-            return false;
+        boolean hasExecutedAnyAction = false;
+
+        if (unit.isAlive()) {
+            List<Tile> enemiesInRange = board.getEnemyAdjacentTiles(unit);
+            if (enemiesInRange.isEmpty()) {
+                moveTowardNearestEnemy(unit);
+                enemiesInRange = board.getEnemyAdjacentTiles(unit);
+            }
+
+            if (!enemiesInRange.isEmpty()) {
+                Unit selectedEnemy = selectEnemy(enemiesInRange);
+                boolean hasKilledEnemy = unit.attack(selectedEnemy);
+                if (hasKilledEnemy) {
+                    Tile selectedEnemyTile = board.getTile(selectedEnemy.getX(), selectedEnemy.getY());
+                    selectedEnemyTile.setUnit(null);
+                }
+            }
         }
+
+        return hasExecutedAnyAction;
+    }
+
+    private Unit selectEnemy(List<Tile> enemiesInRange) {
+        Unit selectedEnemy = null;
+        for (Tile tileWithEnemy : enemiesInRange) {
+            Unit possibleEnemy = tileWithEnemy.getUnit();
+            if (selectedEnemy == null || possibleEnemy.getHp() < selectedEnemy.getHp() ||
+                    (possibleEnemy.getHp() == selectedEnemy.getHp() && possibleEnemy.compareTo(selectedEnemy) < 0)) {
+                selectedEnemy = possibleEnemy;
+            }
+        }
+
+        return selectedEnemy;
     }
 
     private void moveTowardNearestEnemy(Unit unit) {
@@ -70,7 +95,20 @@ public class Battle {
 
     private List<Tile> selectReachableDestinations(Unit.UnitType targetType) {
         return unitsByType.get(targetType).stream()
+                .filter(Unit::isAlive)
                 .flatMap(enemy -> board.getEmptyAdjacentTiles(enemy.getX(), enemy.getY()).stream())
                 .collect(Collectors.toList());
+    }
+
+    private boolean haveAllUnitsOfAtLeastOnTypeDied() {
+        return isAnyAlive(Unit.UnitType.ELF) && isAnyAlive(Unit.UnitType.GOBLIN);
+    }
+
+    private boolean isAnyAlive(Unit.UnitType unitType) {
+        return unitsByType.get(unitType).stream().filter(Unit::isAlive).findAny().isPresent();
+    }
+
+    private int getHpOfAliveUnits() {
+        return allUnits.stream().filter(Unit::isAlive).mapToInt(Unit::getHp).sum();
     }
 }

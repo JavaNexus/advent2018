@@ -1,9 +1,12 @@
 package pl.javanexus.day15;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
 public class Unit implements Comparable {
+
+    public static final int MIN_HP = 0;
+    public static final int MAX_HP = 200;
+    public static final int MAX_ATTACK = 3;
 
     enum UnitType {
         ELF {
@@ -22,27 +25,44 @@ public class Unit implements Comparable {
         public abstract UnitType getEnemyType();
     }
 
-    public static final int MAX_HP = 200;
-    public static final int MAX_ATTACK = 3;
-
+    @Getter
     private final UnitType unitType;
 
-    private int x;
-    private int y;
-    private int hp;
-    private int attack;
+    private final int attackPower;
 
-    public Unit(UnitType unitType) {
+    @Getter
+    private int x;
+    @Getter
+    private int y;
+    @Getter
+    private int hp;
+
+    public Unit(UnitType unitType, int x, int y) {
         this.unitType = unitType;
+        this.x = x;
+        this.y = y;
         this.hp = MAX_HP;
-        this.attack = MAX_ATTACK;
+        this.attackPower = MAX_ATTACK;
     }
 
     public void move(Tile from, Tile to) {
         from.setUnit(null);
         to.setUnit(this);
-        setX(to.getX());
-        setY(to.getY());
+        this.x = to.getX();
+        this.y = to.getY();
+    }
+
+    public boolean attack(Unit target) {
+        target.decrementHp(attackPower);
+        return !target.isAlive();
+    }
+
+    public void decrementHp(int hpDelta) {
+        this.hp -= hpDelta;
+    }
+
+    public boolean isAlive() {
+        return hp > MIN_HP;
     }
 
     @Override

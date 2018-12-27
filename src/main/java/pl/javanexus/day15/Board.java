@@ -127,9 +127,23 @@ public class Board {
 
 
     public void printMap() {
+        List<Unit> unitsInTheRow = new LinkedList<>();
         iterateOverBoard(
-                (x, y) -> System.out.printf("%s", getTile(y, x).getSymbol()),
-                (y) -> System.out.printf("\n"));
+                (x, y) -> {
+                    Tile tile = getTile(y, x);
+                    Unit unit = tile.getUnit();
+                    if (unit != null) {
+                        unitsInTheRow.add(unit);
+                    }
+                    System.out.printf("%s", tile.getSymbol());
+                },
+                (y) -> {
+                    String units = unitsInTheRow.stream()
+                            .map(unit -> String.format("%s(%d)", unit.getUnitType().name(), unit.getHp()))
+                            .collect(Collectors.joining(", ", " ", " "));
+                    unitsInTheRow.clear();
+                    System.out.printf("%s\n", units);
+                });
     }
 
     private void iterateOverBoard(BiConsumer<Integer, Integer> cellConsumer, Consumer<Integer> rowConsumer) {

@@ -15,13 +15,13 @@ public class BoardParser {
         ELF('E') {
             @Override
             public Tile createTile(int x, int y) {
-                return new Tile(x, y, new Unit(Unit.UnitType.ELF));
+                return new Tile(x, y, new Unit(Unit.UnitType.ELF, x, y));
             }
         },
         GOBLIN('G') {
             @Override
             public Tile createTile(int x, int y) {
-                return new Tile(x, y, new Unit(Unit.UnitType.GOBLIN));
+                return new Tile(x, y, new Unit(Unit.UnitType.GOBLIN, x, y));
             }
         },
         ROCK('#') {
@@ -79,9 +79,6 @@ public class BoardParser {
                 row[x] = TileSymbol.getTileSymbol(symbols[x]).createTile(x, y);
                 Unit unit = row[x].getUnit();
                 if (unit != null) {
-                    unit.setX(x);
-                    unit.setY(y);
-
                     allUnits.add(unit);
                 }
             }
