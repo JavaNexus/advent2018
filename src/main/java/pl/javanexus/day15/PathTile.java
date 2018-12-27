@@ -2,6 +2,7 @@ package pl.javanexus.day15;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class PathTile implements Comparable {
 
     private boolean isVisited;
     private int distance;
-    private List<Tile> path = new LinkedList<>();
+    private List<Tile> path = new ArrayList<>();
 
     public PathTile(Tile tile, int distance) {
         this.tile = tile;
@@ -20,7 +21,7 @@ public class PathTile implements Comparable {
     }
 
     public Tile getFirstTileOnPath() {
-        return path.size() == 1 ? tile : path.get(0);
+        return path.size() == 1 ? tile : path.get(path.size() - 2);
     }
 
     @Override

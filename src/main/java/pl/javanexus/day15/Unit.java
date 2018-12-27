@@ -34,6 +34,8 @@ public class Unit implements Comparable {
 
     public Unit(UnitType unitType) {
         this.unitType = unitType;
+        this.hp = MAX_HP;
+        this.attack = MAX_ATTACK;
     }
 
     public void move(Tile from, Tile to) {
