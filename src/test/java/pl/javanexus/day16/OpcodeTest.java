@@ -5,6 +5,7 @@ import org.junit.Test;
 import pl.javanexus.InputReader;
 
 import java.io.IOException;;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -13,6 +14,20 @@ import static org.junit.Assert.assertEquals;
 public class OpcodeTest {
 
     public static final int MIN_NUMBER_OF_MATCHING_OPCODES = 3;
+    public static final int REGISTER_SIZE = 4;
+
+    @Test
+    public void testExecuteProgram() throws IOException {
+        final int[] register = new int[REGISTER_SIZE];
+        final List<int[]> instructions = new InputReader()
+                .readValues("day16_test_part2.input",
+                        (index, line) -> Arrays.stream(line.split(" ")).mapToInt(Integer::parseInt).toArray());
+
+        final Device device = new Device();
+        device.executeProgram(register, instructions);
+
+        System.out.println(Arrays.toString(register));
+    }
 
     @Test
     public void TestResolveOpcodeNumbers() throws IOException {

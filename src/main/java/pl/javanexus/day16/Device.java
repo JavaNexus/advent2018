@@ -66,16 +66,36 @@ public class Device {
             this.inputAType = inputAType;
             this.inputBType = inputBType;
         }
+
+        private static final Map<Integer, Opcode> NUMBER_TO_OPCODE_MAPPING = new HashMap<>();
+        static {
+            for (Opcode opcode : values()) {
+                NUMBER_TO_OPCODE_MAPPING.put(opcode.getOpcodeNumber(), opcode);
+            }
+        }
+
+        public static Opcode getByNumber(int opcodeNumber) {
+            return NUMBER_TO_OPCODE_MAPPING.get(opcodeNumber);
+        }
+    }
+
+    public void executeProgram(int[] register, List<int[]> instructions) {
+        for (int[] instruction : instructions) {
+            Opcode opcode = Opcode.getByNumber(instruction[InputParser.OPCODE_INDEX]);
+            executeOpcode(register, opcode,
+                    instruction[InputParser.INPUT_A_INDEX],
+                    instruction[InputParser.INPUT_B_INDEX],
+                    instruction[InputParser.RESULT_INDEX]);
+        }
     }
 
     public void resolveOpcodeNumbers(List<DeviceInput> inputValues) {
-        final int[] numberOfOpcodes = new int[Opcode.values().length];
-        final int[] numberOfSamplesMatchingOpcode = new int[Opcode.values().length];
+        matchNumbersWithOpcodes(inputValues);
+    }
 
+    private Map<Integer, Set<Opcode>> matchNumbersWithOpcodes(List<DeviceInput> inputValues) {
         Map<Integer, Set<Opcode>> opcodeNumbersMapping = new HashMap<>();
         for (DeviceInput input : inputValues) {
-            numberOfOpcodes[input.getOpcodeNumber()]++;
-
             opcodeNumbersMapping.compute(input.getOpcodeNumber(), (opcodeNumber, allMatchingOpcodes) -> {
                 Set<Opcode> opcodes = getMatchingOpcodes(input);
                 if (allMatchingOpcodes == null) {
@@ -91,9 +111,7 @@ public class Device {
             });
         }
 
-        System.out.println(opcodeNumbersMapping);
-//        System.out.println(Arrays.toString(numberOfOpcodes));
-//        System.out.println(Arrays.toString(numberOfSamplesMatchingOpcode));
+        return opcodeNumbersMapping;
     }
 
     public int countInputValuesMatchingMultipleOpcodes(List<DeviceInput> inputValues,
