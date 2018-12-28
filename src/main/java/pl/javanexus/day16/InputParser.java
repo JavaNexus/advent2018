@@ -8,9 +8,14 @@ import java.util.regex.Pattern;
 
 public class InputParser {
 
+    public static final int OPCODE_INDEX = 0;
+    public static final int INPUT_A_INDEX = 1;
+    public static final int INPUT_B_INDEX = 2;
+    public static final int RESULT_INDEX = 3;
+
     private static final Pattern[] PATTERNS = {
             Pattern.compile("^Before: \\[([0-9]+, [0-9]+, [0-9]+, [0-9]+)]"),
-            Pattern.compile("^([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+)"),
+            Pattern.compile("^[0-9]+ [0-9]+ [0-9]+ [0-9]+"),
             Pattern.compile("^After:  \\[([0-9]+, [0-9]+, [0-9]+, [0-9]+)]"),
             Pattern.compile("^$"),
     };
@@ -19,8 +24,11 @@ public class InputParser {
     public List<DeviceInput> parseInput(List<String> lines) {
         List<DeviceInput> input = new LinkedList<>();
 
+        int[] initialRegister = null;
+        int[] expectedRegister = null;
+        int[] opcode = null;
+
         int index = 0;
-        DeviceInput.DeviceInputBuilder inputBuilder = null;
         for (String line : lines) {
             int lineType = index++ % PATTERNS.length;
 
@@ -28,19 +36,16 @@ public class InputParser {
             if (matcher.find()) {
                 switch (lineType) {
                     case 0:
-                        inputBuilder = DeviceInput.builder().initialRegisterValues(parseIntArray(matcher.group(1), REGISTER_DELIMITER));
+                        initialRegister = parseIntArray(matcher.group(1), REGISTER_DELIMITER);
                         break;
                     case 1:
-                        inputBuilder = inputBuilder
-                                .inputA(Integer.parseInt(matcher.group(2)))
-                                .inputB(Integer.parseInt(matcher.group(3)))
-                                .resultRegisterIndex(Integer.parseInt(matcher.group(4)));
+                        opcode = parseIntArray(matcher.group(), " ");
                         break;
                     case 2:
-                        inputBuilder = inputBuilder.expectedRegisterValues(parseIntArray(matcher.group(1), REGISTER_DELIMITER));
+                        expectedRegister = parseIntArray(matcher.group(1), REGISTER_DELIMITER);
                         break;
                     case 3:
-                        input.add(inputBuilder.build());
+                        input.add(new DeviceInput(initialRegister, opcode, expectedRegister));
                         break;
                 }
             } else {

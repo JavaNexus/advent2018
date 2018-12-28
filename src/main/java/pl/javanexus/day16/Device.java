@@ -2,9 +2,9 @@ package pl.javanexus.day16;
 
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class Device {
 
@@ -22,29 +22,37 @@ public class Device {
             public int getInputValue(int input, int[] register) {
                 return input;
             }
+        },
+        IGNORE {
+            @Override
+            public int getInputValue(int input, int[] register) {
+                return -1;
+            }
         };
 
         public abstract int getInputValue(int input, int[] register);
     }
 
     enum Opcode {
-        ADDR((inputA, inputB) -> inputA + inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
-        ADDI((inputA, inputB) -> inputA + inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
-        MULR((inputA, inputB) -> inputA * inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
-        MULI((inputA, inputB) -> inputA * inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
-        BANR((inputA, inputB) -> inputA & inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
-        BANI((inputA, inputB) -> inputA & inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
-        BORR((inputA, inputB) -> inputA | inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
-        BORI((inputA, inputB) -> inputA | inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
-        SETR((inputA, inputB) -> inputA, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
-        SETI((inputA, inputB) -> inputA, InputType.LITERAL_VALUE, InputType.FROM_REGISTER),
-        GTIR((inputA, inputB) -> inputA > inputB ? 1 : 0, InputType.LITERAL_VALUE, InputType.FROM_REGISTER),
-        GTRI((inputA, inputB) -> inputA > inputB ? 1 : 0, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
-        GTRR((inputA, inputB) -> inputA > inputB ? 1 : 0, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
-        EQIR((inputA, inputB) -> inputA.equals(inputB) ? 1 : 0, InputType.LITERAL_VALUE, InputType.FROM_REGISTER),
-        EQRI((inputA, inputB) -> inputA.equals(inputB) ? 1 : 0, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
-        EQRR((inputA, inputB) -> inputA.equals(inputB) ? 1 : 0, InputType.FROM_REGISTER, InputType.FROM_REGISTER);
+        ADDR(0, (inputA, inputB) -> inputA + inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
+        ADDI(5, (inputA, inputB) -> inputA + inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
+        MULR(14, (inputA, inputB) -> inputA * inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
+        MULI(9, (inputA, inputB) -> inputA * inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
+        BANR(6, (inputA, inputB) -> inputA & inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
+        BANI(15, (inputA, inputB) -> inputA & inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
+        BORR(13, (inputA, inputB) -> inputA | inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
+        BORI(8, (inputA, inputB) -> inputA | inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
+        SETR(12, (inputA, inputB) -> inputA, InputType.FROM_REGISTER, InputType.IGNORE),
+        SETI(10, (inputA, inputB) -> inputA, InputType.LITERAL_VALUE, InputType.IGNORE),
+        GTIR(4, (inputA, inputB) -> inputA > inputB ? 1 : 0, InputType.LITERAL_VALUE, InputType.FROM_REGISTER),
+        GTRI(7, (inputA, inputB) -> inputA > inputB ? 1 : 0, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
+        GTRR(11, (inputA, inputB) -> inputA > inputB ? 1 : 0, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
+        EQIR(2, (inputA, inputB) -> inputA.equals(inputB) ? 1 : 0, InputType.LITERAL_VALUE, InputType.FROM_REGISTER),
+        EQRI(1, (inputA, inputB) -> inputA.equals(inputB) ? 1 : 0, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
+        EQRR(3, (inputA, inputB) -> inputA.equals(inputB) ? 1 : 0, InputType.FROM_REGISTER, InputType.FROM_REGISTER);
 
+        @Getter
+        private final int opcodeNumber;
         @Getter
         private final BiFunction<Integer, Integer, Integer> instruction;
         @Getter
@@ -52,20 +60,47 @@ public class Device {
         @Getter
         private final InputType inputBType;
 
-        Opcode(BiFunction<Integer, Integer, Integer> instruction, InputType inputAType, InputType inputBType) {
+        Opcode(int opcodeNumber, BiFunction<Integer, Integer, Integer> instruction, InputType inputAType, InputType inputBType) {
+            this.opcodeNumber = opcodeNumber;
             this.instruction = instruction;
             this.inputAType = inputAType;
             this.inputBType = inputBType;
         }
     }
 
-    private final int[] registers = new int[NUMBER_OF_REGISTERS];
+    public void resolveOpcodeNumbers(List<DeviceInput> inputValues) {
+        final int[] numberOfOpcodes = new int[Opcode.values().length];
+        final int[] numberOfSamplesMatchingOpcode = new int[Opcode.values().length];
+
+        Map<Integer, Set<Opcode>> opcodeNumbersMapping = new HashMap<>();
+        for (DeviceInput input : inputValues) {
+            numberOfOpcodes[input.getOpcodeNumber()]++;
+
+            opcodeNumbersMapping.compute(input.getOpcodeNumber(), (opcodeNumber, allMatchingOpcodes) -> {
+                Set<Opcode> opcodes = getMatchingOpcodes(input);
+                if (allMatchingOpcodes == null) {
+                    allMatchingOpcodes = new HashSet<>();
+                    allMatchingOpcodes.addAll(opcodes);
+                } else {
+                    allMatchingOpcodes = opcodes.stream()
+                            .filter(allMatchingOpcodes::contains)
+                            .collect(Collectors.toSet());
+                }
+
+                return allMatchingOpcodes;
+            });
+        }
+
+        System.out.println(opcodeNumbersMapping);
+//        System.out.println(Arrays.toString(numberOfOpcodes));
+//        System.out.println(Arrays.toString(numberOfSamplesMatchingOpcode));
+    }
 
     public int countInputValuesMatchingMultipleOpcodes(List<DeviceInput> inputValues,
                                                        int minNumberOfMatchingOpcodes) {
         int numberOfInputValuesMatchingMultipleOpcodes = 0;
         for (DeviceInput input : inputValues) {
-            if (countMatchingOpcodes(input) >= minNumberOfMatchingOpcodes) {
+            if (getMatchingOpcodes(input).size() >= minNumberOfMatchingOpcodes) {
                 numberOfInputValuesMatchingMultipleOpcodes++;
             }
         }
@@ -73,22 +108,29 @@ public class Device {
         return numberOfInputValuesMatchingMultipleOpcodes;
     }
 
-    public int countMatchingOpcodes(DeviceInput input) {
-        int numberOfMatchingOpcodes = 0;
+    public Set<Opcode> getMatchingOpcodes(DeviceInput input) {
+        Set<Opcode> matchingOpcodes = new HashSet<>();
         for (Opcode opcode : Opcode.values()) {
             int[] register = Arrays.copyOf(input.getInitialRegisterValues(), input.getInitialRegisterValues().length);
             executeOpcode(register, opcode, input.getInputA(), input.getInputB(), input.getResultRegisterIndex());
-            if (input.isExpectedRegister(register)) {
-                numberOfMatchingOpcodes++;
+            if (input.isExpectedRegisterValue(register)) {
+                matchingOpcodes.add(opcode);
             }
         }
 
-        return numberOfMatchingOpcodes;
+        return matchingOpcodes;
     }
 
-    public void executeOpcode(int[] registerValues, Opcode oppCode, int inputA, int inputB, int resultRegisterIndex) {
-        int inputAValue = oppCode.getInputAType().getInputValue(inputA, registerValues);
-        int inputBValue = oppCode.getInputBType().getInputValue(inputB, registerValues);
-        registerValues[resultRegisterIndex] = oppCode.getInstruction().apply(inputAValue, inputBValue);
+    public int[] executeOpcode(Opcode opcode, DeviceInput input) {
+        int[] register = input.getInitialRegisterValues();
+        executeOpcode(register, opcode, input.getInputA(), input.getInputB(), input.getResultRegisterIndex());
+
+        return register;
+    }
+
+    public void executeOpcode(int[] registerValues, Opcode opcode, int inputA, int inputB, int resultRegisterIndex) {
+        int inputAValue = opcode.getInputAType().getInputValue(inputA, registerValues);
+        int inputBValue = opcode.getInputBType().getInputValue(inputB, registerValues);
+        registerValues[resultRegisterIndex] = opcode.getInstruction().apply(inputAValue, inputBValue);
     }
 }
