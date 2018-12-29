@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="lines.js"></script>
+</head>
+<body>
+
+<canvas id="myCanvas" width="750" height="2000" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+<script>
+
+var water = {fromX: 500, fromY: 0, toX: 500, toY: 2000}
+
+function printLine(ctx, line) {
+    ctx.beginPath();
+    ctx.moveTo(line.fromX, line.fromY);
+    ctx.lineTo(line.toX, line.toY);
+    ctx.stroke();
+}
+
+function printLines(ctx) {
+    for (i = 0; i < lines.length; i++) {
+        printLine(ctx, lines[i]);
+    }
+}
+
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+printLines(ctx);
+
+ctx.strokeStyle = "#0080ff";
+printLine(ctx, water);
+
+var canvas = document.getElementById("myCanvas")
+canvas.addEventListener('click', function(e) {
+    console.log(e.offsetX + ' x ' + e.offsetY);
+}, false);
+
+</script>
+
+</body>
+</html>
