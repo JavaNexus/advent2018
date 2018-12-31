@@ -2,20 +2,29 @@
 <html>
 <head>
     <script src="lines.js"></script>
+    <script src="data.js"></script>
+	<!--<script src="filled.js"></script>-->
+    <!--<script src="water.js"></script>-->
 </head>
 <body>
 
-<canvas id="myCanvas" width="750" height="2000" style="border:1px solid #d3d3d3;">
+<canvas id="myCanvas" width="1200" height="2000" style="border:1px solid #d3d3d3;">
     Your browser does not support the HTML5 canvas tag.</canvas>
 <script>
 
-var water = {fromX: 500, fromY: 0, toX: 500, toY: 2000}
+var waterSrc = {fromX: 500, fromY: 0, toX: 500, toY: 2000}
+var multiplierX = 2;
+var offsetX = 400;
 
 function printLine(ctx, line) {
     ctx.beginPath();
-    ctx.moveTo(line.fromX, line.fromY);
-    ctx.lineTo(line.toX, line.toY);
+    ctx.moveTo(multiplierX * (line.fromX - offsetX), line.fromY);
+    ctx.lineTo(multiplierX * (line.toX - offsetX), line.toY);
     ctx.stroke();
+}
+
+function printFilledRect(ctx, rect) {
+	ctx.fillRect(multiplierX * (rect.x - offsetX), rect.y, multiplierX * rect.width, rect.height);
 }
 
 function printLines(ctx) {
@@ -24,13 +33,27 @@ function printLines(ctx) {
     }
 }
 
+function printWaterLines(ctx) {
+    for (i = 0; i < waterLines.length; i++) {
+        printLine(ctx, waterLines[i]);
+    }
+}
+
+function printFilled(ctx) {
+	ctx.fillStyle = "#0080ff";
+	for (i = 0; i < filled.length; i++) {
+		printFilledRect(ctx, filled[i]);
+	}
+}
+
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
 
+printFilled(ctx);
 printLines(ctx);
 
 ctx.strokeStyle = "#0080ff";
-printLine(ctx, water);
+printWaterLines(ctx);
 
 var canvas = document.getElementById("myCanvas")
 canvas.addEventListener('click', function(e) {

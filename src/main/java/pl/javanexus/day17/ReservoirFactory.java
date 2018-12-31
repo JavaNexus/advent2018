@@ -2,10 +2,7 @@ package pl.javanexus.day17;
 
 import pl.javanexus.Line;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReservoirFactory {
@@ -34,6 +31,13 @@ public class ReservoirFactory {
 
         matchEnclosingLinesWithReservoirs(enclosingLines, reservoirs);
         // TODO: 2018-12-29 match inner reservoirs
+        for (Reservoir outer : reservoirs.values()) {
+            for (Reservoir inner : reservoirs.values()) {
+                if (outer.isInner(inner)) {
+                    outer.setInnerReservoir(Optional.of(inner));
+                }
+            }
+        }
 
         return reservoirs;
     }

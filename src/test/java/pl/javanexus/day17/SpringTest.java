@@ -1,7 +1,7 @@
 package pl.javanexus.day17;
 
+import org.junit.Before;
 import org.junit.Test;
-import pl.javanexus.InputReader;
 import pl.javanexus.Line;
 
 import java.io.File;
@@ -9,72 +9,84 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class SpringTest {
 
     public static final String LINES_JSON_FILE = "D:\\Projekty\\Java\\advent2018\\src\\test\\resources\\spring\\lines.js";
-    //    x=628, y=204..206
-    //    y=1663, x=597..601
-    public static final Pattern PATTERN = Pattern.compile("(x|y)=([0-9]+), (x|y)=([0-9]+)..([0-9]+)");
 
-    enum InputLineType {
-        CONST_X("x") {
-            @Override
-            public Line getLine(int constant, int from, int to) {
-                return new Line(new Point(constant, from), new Point(constant, to));
-            }
-        },
-        CONST_Y("y") {
-            @Override
-            public Line getLine(int constant, int from, int to) {
-                return new Line(new Point(from, constant), new Point(to, constant));
-            }
-        };
+    public static final int SPRING_X = 500;
+    public static final int SPRING_Y = 0;
+    private InputParser inputParser;
 
-        private final String dimension;
-
-        InputLineType(String dimension) {
-            this.dimension = dimension;
-        }
-
-        public abstract Line getLine(int constant, int from, int to);
-
-        public static InputLineType getByConstantDimension(String dimension) {
-            return CONST_X.dimension.equals(dimension) ? CONST_X : CONST_Y;
-        }
+    @Before
+    public void setUp() throws Exception {
+        this.inputParser = new InputParser();
     }
 
-    private List<Line> parseInput(String inputFileName) throws IOException {
-        return new InputReader().readValues(inputFileName,
-                (index, line) -> {
-                    Matcher matcher = PATTERN.matcher(line);
-                    if (matcher.find()) {
-                        return InputLineType.getByConstantDimension(matcher.group(1)).getLine(
-                                Integer.parseInt(matcher.group(2)),
-                                Integer.parseInt(matcher.group(4)),
-                                Integer.parseInt(matcher.group(5)));
-                    } else {
-                        throw new IllegalArgumentException("Unexpected line pattern: " + line);
-                    }
-                });
+    @Test
+    public void testMeasureWaterFlow() throws IOException {
+        ReservoirFactory reservoirFactory = new ReservoirFactory();
+        Map<Point, Reservoir> reservoirs =
+                reservoirFactory.createReservoirs(inputParser.parseInput("day17_test.input"));//"day17_small.input"
+        Spring spring = new Spring(new Point(SPRING_X, SPRING_Y), reservoirs);
+        assertEquals(57, spring.measureWaterFlow());
+    }
+
+    @Test
+    public void testGetVolume() {
+        Reservoir reservoir = new Reservoir(
+                new Point(498, 10),
+                new Point(504, 10),
+                new Point(498, 13),
+                new Point(504, 13));
+        assertEquals(15, reservoir.getVolume());
+    }
+
+    @Test
+    public void testIsUnderPoint() {
+        Reservoir reservoir = new Reservoir(
+                new Point(480, 32),
+                new Point(503, 32),
+                new Point(480, 43),
+                new Point(503, 43));
+        assertTrue(reservoir.isUnderPoint(new Point(490, 37)));
+    }
+
+    @Test
+    public void testGetNextWaterSources() {
+        Reservoir reservoir = new Reservoir(
+                new Point(492, 9),
+                new Point(512, 8),
+                new Point(492, 21),
+                new Point(512, 21));
+        List<Point> waterSources = reservoir.getNextWaterSources();
+        assertEquals(2, waterSources.size());
+
+        Point left = waterSources.get(0);
+        assertEquals(491, left.getX());
+        assertEquals(10, left.getY());
+
+        Point right = waterSources.get(1);
+        assertEquals(513, right.getX());
+        assertEquals(9, right.getY());
     }
 
     @Test
     public void testCreateReservoir() throws IOException {
         ReservoirFactory reservoirFactory = new ReservoirFactory();
         Map<Point, Reservoir> reservoirs =
-                reservoirFactory.createReservoirs(parseInput("day17_test.input"));
+                reservoirFactory.createReservoirs(inputParser.parseInput("day17_test.input"));
         assertFalse(reservoirs.isEmpty());
     }
 
     @Test
     public void testInputFile() throws IOException {
-        String linesJson = parseInput("day17_test.input").stream()
+        String linesJson = inputParser.parseInput("day17_test.input").stream()
                 .map(Line::toJSON)
                 .collect(Collectors.joining(", ", "[", "]"));
 
