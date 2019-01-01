@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="lines.js"></script>
-    <script src="data.js"></script>
+    <!--<script src="lines.js"></script>-->
+    <script src="data_first_left_than_right.js"></script>
 	<!--<script src="filled.js"></script>-->
     <!--<script src="water.js"></script>-->
 </head>
 <body>
 
-<canvas id="myCanvas" width="1200" height="2000" style="border:1px solid #d3d3d3;">
+<canvas id="myCanvas" width="1200" height="4200" style="border:1px solid #d3d3d3;">
     Your browser does not support the HTML5 canvas tag.</canvas>
 <script>
 
 var waterSrc = {fromX: 500, fromY: 0, toX: 500, toY: 2000}
+var size = 1;//2;
 var multiplierX = 2;
-var offsetX = 400;
+var offsetX = 0;//400;
 
 function printLine(ctx, line) {
     ctx.beginPath();
@@ -46,14 +47,27 @@ function printFilled(ctx) {
 	}
 }
 
+function printGrid(ctx) {
+    for (i = 0; i < points.length; i++) {
+        var p = points[i];
+        //console.log(p.x + ", " + p.y);
+
+		ctx.fillStyle = p.s == '#' ? "#000000" : "#0080ff";
+		ctx.fillRect((p.x - offsetX) * size, p.y * size, size, size);
+		ctx.stroke();
+    }
+}
+
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
 
-printFilled(ctx);
-printLines(ctx);
+<!--printFilled(ctx);-->
+<!--printLines(ctx);-->
 
-ctx.strokeStyle = "#0080ff";
-printWaterLines(ctx);
+<!--ctx.strokeStyle = "#0080ff";-->
+<!--printWaterLines(ctx);-->
+
+printGrid(ctx);
 
 var canvas = document.getElementById("myCanvas")
 canvas.addEventListener('click', function(e) {

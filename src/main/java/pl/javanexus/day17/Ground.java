@@ -1,6 +1,5 @@
 package pl.javanexus.day17;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import pl.javanexus.Line;
@@ -10,15 +9,18 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class Ground {
+public class Ground implements SerializableToJson {
 
+    private final Map<Integer, Point> spillagePoints;
     private final Tile[][] grid;
+
     private final int width;
     private final int height;
 
     public Ground(List<Line> lines) {
-        this.width = lines.stream().mapToInt(reservoir -> reservoir.getTo().getX()).max().getAsInt() + 1;
-        this.height = lines.stream().mapToInt(reservoir -> reservoir.getTo().getY()).max().getAsInt() + 1;
+        this.width = lines.stream().mapToInt(reservoir -> reservoir.getTo().getX()).max().getAsInt() + 2;
+        this.height = lines.stream().mapToInt(reservoir -> reservoir.getTo().getY()).max().getAsInt() + 2;
+        this.spillagePoints = new HashMap<>();
         this.grid = initGrid(GroundType.SAND);
         fillInGrid(lines, GroundType.CLAY);
     }
@@ -45,41 +47,41 @@ public class Ground {
         return grid;
     }
 
-    public void simulateWaterFlow(Point firstPoint) {
+    public void simulateWaterFlow(Point firstPoint, int expectedNumberOfSpillagePoints) {
         Stack<Point> groundToCover = new Stack<>();
-        groundToCover.push(firstPoint);
+        Stack<Point> groundVisited = new Stack<>();
 
-        while (!groundToCover.isEmpty()) {
-            Point currentPoint = groundToCover.pop();
-
-            getGroundTile(currentPoint).ifPresent(currentTile -> {
-                simulateWaterFlow(currentPoint, currentTile, groundToCover);
+        Point currentPoint = firstPoint;
+        while (currentPoint != null) {
+            Optional<Tile> groundTile = getGroundTile(currentPoint);
+            if (groundTile.isPresent()) {
+                simulateWaterFlow(currentPoint, groundTile.get(), groundToCover);
                 printGround();
-            });
+            }
+
+//            if (spillagePoints.size() == expectedNumberOfSpillagePoints) {
+//                currentPoint = null;
+//            } else
+            if (!groundToCover.isEmpty()) {
+                groundVisited.push(currentPoint);
+                currentPoint = groundToCover.pop();
+            } else if (!groundVisited.isEmpty()) {
+                currentPoint = groundVisited.pop();
+            } else {
+                currentPoint = null;
+            }
         }
     }
 
     private void simulateWaterFlow(Point currentPoint, Tile currentTile, Stack<Point> groundToCover) {
+        currentTile.setGroundType(GroundType.WATER);
         currentTile.visit();
 
-        switch (currentTile.getGroundType()) {
-            case SAND:
-            case WATER:
-                currentTile.setGroundType(GroundType.WATER);
-                getNextPoints(currentPoint)
-                        .forEach(nextPoint -> groundToCover.push(nextPoint));
-//                groundToCover.push(currentPoint.getPointBelow());
-                break;
-            case CLAY:
-//                Point pointAbove = currentPoint.getPointAbove();
-//                groundToCover.push(pointAbove.getPointToTheLeft());
-//                groundToCover.push(pointAbove.getPointToTheRight());
-                break;
-//            case WATER:
-//                groundToCover.push(currentPoint.getPointAbove());
-//                break;
-            default:
-                throw new IllegalArgumentException("Unexpected ground type: " + currentPoint);
+        if (currentPoint.getY() == height - 1) {
+            spillagePoints.put(currentPoint.getX(), currentPoint);
+        } else if (currentTile.numberOfVisits < 2) {//!spillagePoints.containsKey(currentPoint.getX())
+            getNextPoints(currentPoint)
+                    .forEach(nextPoint -> groundToCover.push(nextPoint));
         }
     }
 
@@ -93,8 +95,7 @@ public class Ground {
         Iterator<Point[]> possiblePoints = Arrays.asList(
                 new Point[] {currentPoint.getPointBelow()},
                 new Point[] {currentPoint.getPointToTheLeft()},
-                new Point[] {currentPoint.getPointToTheRight()},
-                new Point[] {currentPoint.getPointAbove()}
+                new Point[] {currentPoint.getPointToTheRight()}
         ).iterator();
 
         Set<Point> nextPoints = new HashSet<>();
@@ -115,15 +116,15 @@ public class Ground {
 
     public int measureWaterVolume() {
         int waterVolume = 0;
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width - 1; x++) {
+            for (int y = 0; y < height - 1; y++) {
                 if (getGroundTile(x, y).get().getGroundType() == GroundType.WATER) {
                     waterVolume++;
                 }
             }
         }
 
-        return waterVolume;
+        return waterVolume - 1;
     }
 
     public void printGround() {
@@ -137,7 +138,7 @@ public class Ground {
                             }
                         }),
                 (y) -> System.out.printf("\n"),
-                475);
+                480);
         System.out.println();
     }
 
@@ -170,25 +171,41 @@ public class Ground {
         }
     }
 
+    @Override
+    public String toJSON() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("var points = [");
+
+        iterateOverGrid(
+                (x, y) -> {
+                    getGroundTile(x, y)
+                            .map(Tile::getGroundType)
+                            .filter(type -> type == GroundType.WATER || type == GroundType.CLAY)
+                            .ifPresent(type -> builder.append(String.format("{x:%d, y:%d, s:'%s'},", x, y, type.getSymbol())));
+                },
+                (y) -> {},
+                0);
+        builder.append("];");
+
+        return builder.toString();
+    }
+
     private class Tile {
 
-        public static final int MAX_NUMBER_OF_VISITS = 3;
         @Getter @Setter
         private GroundType groundType;
         private int numberOfVisits;
 
         public Tile(GroundType groundType) {
             this.groundType = groundType;
-            this.numberOfVisits = 0;
-        }
-
-        public void visit() {
-            this.numberOfVisits++;
         }
 
         public boolean canWaterFlowThrough() {
-            return numberOfVisits < MAX_NUMBER_OF_VISITS &&
-                    (groundType == GroundType.SAND || groundType == GroundType.WATER);
+            return groundType == GroundType.SAND;
+        }
+
+        public void visit() {
+            numberOfVisits++;
         }
     }
 }
