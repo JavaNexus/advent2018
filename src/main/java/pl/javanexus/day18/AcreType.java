@@ -9,7 +9,7 @@ public enum AcreType {
         private final int MIN_ADJACENT_TREES = 3;
 
         @Override
-        public AcreType getNextGroundType(Set<AcreType> adjacentTypes) {
+        public AcreType getNextGroundType(List<AcreType> adjacentTypes) {
             return countType(adjacentTypes, TREES) >= MIN_ADJACENT_TREES ? TREES : OPEN;
         }
     },
@@ -17,7 +17,7 @@ public enum AcreType {
         private final int MIN_ADJACENT_LUMBERYARDS = 3;
 
         @Override
-        public AcreType getNextGroundType(Set<AcreType> adjacentTypes) {
+        public AcreType getNextGroundType(List<AcreType> adjacentTypes) {
             return countType(adjacentTypes, LUMBERYARD) >= MIN_ADJACENT_LUMBERYARDS ? LUMBERYARD : TREES;
         }
     },
@@ -26,7 +26,7 @@ public enum AcreType {
         private final int MIN_ADJACENT_LUMBERYARDS = 1;
 
         @Override
-        public AcreType getNextGroundType(Set<AcreType> adjacentTypes) {
+        public AcreType getNextGroundType(List<AcreType> adjacentTypes) {
             return countType(adjacentTypes, LUMBERYARD) >= MIN_ADJACENT_LUMBERYARDS
                     && countType(adjacentTypes, TREES) >= MIN_ADJACENT_TREES ? LUMBERYARD : OPEN;
         }
@@ -47,11 +47,11 @@ public enum AcreType {
                 .orElseThrow(() -> new IllegalArgumentException("Unexpected symbol: " + symbol));
     }
 
-    private static long countType(Set<AcreType> adjacentTypes, AcreType expectedType) {
+    private static long countType(List<AcreType> adjacentTypes, AcreType expectedType) {
         return adjacentTypes.stream().filter(type -> type == expectedType).count();
     }
 
-    public abstract AcreType getNextGroundType(Set<AcreType> adjacentTypes);
+    public abstract AcreType getNextGroundType(List<AcreType> adjacentTypes);
 
     public char getSymbol() {
         return symbol;

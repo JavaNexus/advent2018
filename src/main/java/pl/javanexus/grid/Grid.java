@@ -1,11 +1,9 @@
 package pl.javanexus.grid;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class Grid<P extends Point> {
 
@@ -19,18 +17,20 @@ public class Grid<P extends Point> {
         this.height = points.length;
     }
 
-    private Set<P> getAdjacentPoints(P centralPoint) {
-        Set<P> adjacent = new HashSet<>();
-        for (int y = centralPoint.getY() - 1; y < centralPoint.getY() + 1; y++) {
-            for (int x = centralPoint.getX() - 1; x < centralPoint.getX() + 1; x++) {
-                getPoint(x, y).ifPresent(adjacent::add);
+    public List<P> getAdjacentPoints(P centralPoint) {
+        List<P> adjacent = new ArrayList<>();
+        for (int y = centralPoint.getY() - 1; y <= centralPoint.getY() + 1; y++) {
+            for (int x = centralPoint.getX() - 1; x <= centralPoint.getX() + 1; x++) {
+                getPoint(x, y)
+                        .filter(point -> point.getX() != centralPoint.getX() || point.getY() != centralPoint.getY())
+                        .ifPresent(adjacent::add);
             }
         }
 
         return adjacent;
     }
 
-    private Set<P> getGridAdjacentPoints(P centralPoint) {
+    protected Set<P> getGridAdjacentPoints(P centralPoint) {
         return null;
     }
 
@@ -42,7 +42,7 @@ public class Grid<P extends Point> {
         System.out.println();
     }
 
-    private void iterateOverGrid(BiConsumer<Integer, Integer> cellConsumer, Consumer<Integer> rowConsumer) {
+    protected void iterateOverGrid(BiConsumer<Integer, Integer> cellConsumer, Consumer<Integer> rowConsumer) {
         for (int y = 0; y < points.length; y++) {
             for (int x = 0; x < points[y].length; x++) {
                 cellConsumer.accept(x, y);
@@ -51,11 +51,15 @@ public class Grid<P extends Point> {
         }
     }
 
-    private Optional<P> getPoint(int x, int y) {
+    public Optional<P> getPoint(int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             return Optional.of(points[y][x]);
         } else {
             return Optional.empty();
         }
+    }
+
+    protected Stream<P> getPointsStream() {
+        return Arrays.stream(points).flatMap(row -> Arrays.stream(row));
     }
 }

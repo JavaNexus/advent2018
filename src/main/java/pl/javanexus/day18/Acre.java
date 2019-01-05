@@ -1,6 +1,8 @@
 package pl.javanexus.day18;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import pl.javanexus.grid.Point;
 
@@ -10,12 +12,21 @@ public class Acre implements Point {
 
     private final int x;
     private final int y;
-    private AcreType type;
 
-    public Acre(int x, int y, AcreType type) {
+    @Getter
+    private AcreType currentType;
+    @Getter @Setter
+    private AcreType nextType;
+
+    public Acre(int x, int y, AcreType currentType) {
         this.x = x;
         this.y = y;
-        this.type = type;
+        this.currentType = currentType;
+    }
+
+    public void changeTypeToNext() {
+        this.currentType = nextType;
+        this.nextType = null;
     }
 
     @Override
@@ -30,6 +41,6 @@ public class Acre implements Point {
 
     @Override
     public char getSymbol() {
-        return type.getSymbol();
+        return currentType.getSymbol();
     }
 }
