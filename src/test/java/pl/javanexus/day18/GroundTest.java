@@ -2,7 +2,7 @@ package pl.javanexus.day18;
 
 import org.junit.Before;
 import org.junit.Test;
-import pl.javanexus.grid.Grid;
+import pl.javanexus.InputReader;
 import pl.javanexus.grid.GridFactory;
 
 import java.io.IOException;
@@ -14,7 +14,10 @@ import static org.junit.Assert.assertEquals;
 
 public class GroundTest {
 
-    public static final int NUMBER_OF_MINUTES = 10;
+    public static final int NUMBER_OF_MINUTES_PART_1 = 10;
+    public static final int NUMBER_OF_MINUTES_PART_2 = 1000000000;
+    public static final int TEN_MILLION = 10 * 1000000;
+
     private GridFactory<Ground, Acre> gridFactory;
 
     @Before
@@ -38,11 +41,25 @@ public class GroundTest {
     }
 
     @Test
+    public void testPart2() throws IOException {
+        String fileName = "day18/day18_test.input";//day18_simple
+        List<char[]> rows =
+                new InputReader().readValues(fileName, (index, line) -> line.toCharArray());
+        GroundByteBuffer ground = new GroundByteBuffer(rows);
+        ground.simulateGrowth(TEN_MILLION);//NUMBER_OF_MINUTES_PART_2
+        int[] byType = ground.countByType();
+
+        System.out.println(" . " + byType['.']);
+        System.out.println(" | " + byType['|']);
+        System.out.println(" # " + byType['#']);
+    }
+
+    @Test
     public void testSimulateGrowth() throws Exception {
         Ground grid = gridFactory.createGridFromInputFile("day18/day18_simple.input");
         grid.print();
 
-        grid.simulateGrowth(NUMBER_OF_MINUTES);
+        grid.simulateGrowth(NUMBER_OF_MINUTES_PART_1);
         grid.print();
 
         Map<AcreType, Integer> numberOfAcresByType = grid.countByType();
@@ -55,7 +72,7 @@ public class GroundTest {
         Ground grid = gridFactory.createGridFromInputFile("day18/day18_test.input");
         grid.print();
 
-        grid.simulateGrowth(NUMBER_OF_MINUTES);
+        grid.simulateGrowth(NUMBER_OF_MINUTES_PART_2);
         grid.print();
 
         Map<AcreType, Integer> numberOfAcresByType = grid.countByType();
