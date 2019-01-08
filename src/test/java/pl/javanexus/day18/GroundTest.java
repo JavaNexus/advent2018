@@ -6,6 +6,7 @@ import pl.javanexus.InputReader;
 import pl.javanexus.grid.GridFactory;
 
 import java.io.IOException;
+import java.nio.CharBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,6 +17,7 @@ public class GroundTest {
 
     public static final int NUMBER_OF_MINUTES_PART_1 = 10;
     public static final int NUMBER_OF_MINUTES_PART_2 = 1000000000;
+    public static final int ONE_MILLION = 1 * 1000000;
     public static final int TEN_MILLION = 10 * 1000000;
 
     private GridFactory<Ground, Acre> gridFactory;
@@ -46,9 +48,18 @@ public class GroundTest {
         List<char[]> rows =
                 new InputReader().readValues(fileName, (index, line) -> line.toCharArray());
         GroundByteBuffer ground = new GroundByteBuffer(rows);
-        ground.simulateGrowth(TEN_MILLION);//NUMBER_OF_MINUTES_PART_2
-        int[] byType = ground.countByType();
+        ground.print(0);
 
+        ground.simulateGrowth(NUMBER_OF_MINUTES_PART_2);
+
+        System.out.println();
+        ground.print(0);
+
+        printResult(ground.countByType(0));//212176
+        printResult(ground.countByType(1));
+    }
+
+    private void printResult(int[] byType) {
         System.out.println(" . " + byType['.']);
         System.out.println(" | " + byType['|']);
         System.out.println(" # " + byType['#']);
