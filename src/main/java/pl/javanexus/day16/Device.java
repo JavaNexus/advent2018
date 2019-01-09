@@ -33,7 +33,7 @@ public class Device {
         public abstract int getInputValue(int input, int[] register);
     }
 
-    enum Opcode {
+    public enum Opcode {
         ADDR(0, (inputA, inputB) -> inputA + inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
         ADDI(5, (inputA, inputB) -> inputA + inputB, InputType.FROM_REGISTER, InputType.LITERAL_VALUE),
         MULR(14, (inputA, inputB) -> inputA * inputB, InputType.FROM_REGISTER, InputType.FROM_REGISTER),
@@ -81,11 +81,20 @@ public class Device {
 
     public void executeProgram(int[] register, List<int[]> instructions) {
         for (int[] instruction : instructions) {
-            Opcode opcode = Opcode.getByNumber(instruction[InputParser.OPCODE_INDEX]);
-            executeOpcode(register, opcode,
-                    instruction[InputParser.INPUT_A_INDEX],
-                    instruction[InputParser.INPUT_B_INDEX],
-                    instruction[InputParser.RESULT_INDEX]);
+            executeOpcode(register, instruction);
+        }
+    }
+
+    public void executeProgram(int instructionPointer, int[] register, int[][] instructions) {
+        int nextInstruction = instructionPointer;
+        while (nextInstruction < instructions.length) {
+            register[instructionPointer] = nextInstruction;
+            System.out.println("Before: " + Arrays.toString(register));
+
+            executeOpcode(register, instructions[nextInstruction]);
+
+            nextInstruction = register[instructionPointer] + 1;
+            System.out.println("After: " + Arrays.toString(register) + "\n");
         }
     }
 
@@ -144,6 +153,16 @@ public class Device {
         executeOpcode(register, opcode, input.getInputA(), input.getInputB(), input.getResultRegisterIndex());
 
         return register;
+    }
+
+    public void executeOpcode(int[] register, int[] instruction) {
+        Opcode opcode = Opcode.getByNumber(instruction[InputParser.OPCODE_INDEX]);
+        System.out.println(opcode + " >: " + Arrays.toString(instruction));
+
+        executeOpcode(register, opcode,
+                instruction[InputParser.INPUT_A_INDEX],
+                instruction[InputParser.INPUT_B_INDEX],
+                instruction[InputParser.RESULT_INDEX]);
     }
 
     public void executeOpcode(int[] registerValues, Opcode opcode, int inputA, int inputB, int resultRegisterIndex) {
