@@ -86,16 +86,17 @@ public class Device {
     }
 
     public void executeProgram(int instructionPointer, int[] register, int[][] instructions) {
-        int nextInstruction = instructionPointer;
-        while (nextInstruction < instructions.length) {
-            register[instructionPointer] = nextInstruction;
+        int nextInstruction;
+        while (register[instructionPointer] < instructions.length) {
+            nextInstruction = register[instructionPointer];
             System.out.println("Before: " + Arrays.toString(register));
 
             executeOpcode(register, instructions[nextInstruction]);
 
-            nextInstruction = register[instructionPointer] + 1;
+            register[instructionPointer]++;
             System.out.println("After: " + Arrays.toString(register) + "\n");
         }
+        register[instructionPointer]--;
     }
 
     public void resolveOpcodeNumbers(List<DeviceInput> inputValues) {

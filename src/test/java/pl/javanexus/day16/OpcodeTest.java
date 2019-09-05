@@ -153,5 +153,12 @@ public class OpcodeTest {
         //register A is equal to register B
         input = new DeviceInput(new int[] {1, 4, 3, 4}, new int[] {-1, 1, 3, 1}, new int[] {1, 1, 3, 4});
         assertArrayEquals(input.getExpectedRegisterValues(), device.executeOpcode(Device.Opcode.EQRR, input));
+
+        //register A is NOT equal to register B
+        input = new DeviceInput(new int[] {1, 1, 3, 4}, new int[] {-1, 1, 3, 1}, new int[] {1, 0, 3, 4});
+        assertArrayEquals(input.getExpectedRegisterValues(), device.executeOpcode(Device.Opcode.EQRR, input));
+
+//        input = new DeviceInput(new int[] {0, 0, 0, 4}, new int[] {-1, 1, 4, 1}, new int[] {1, 1, 3, 4});
+//        assertArrayEquals(input.getExpectedRegisterValues(), device.executeOpcode(Device.Opcode.EQRR, input));
     }
 }

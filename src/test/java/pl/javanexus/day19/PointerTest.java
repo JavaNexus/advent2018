@@ -38,10 +38,13 @@ public class PointerTest {
     public void testInstructionPointerFromInput() throws Exception {
         int instructionPointer = 3;
         int[] register = new int[REGISTER_SIZE];
+        register[0] = 1;
         int[][] instructions = parseInstructions("day19/day19_test.input");
 
         new Device().executeProgram(instructionPointer, register, instructions);
         System.out.println(Arrays.toString(register));
+        //256 is too low
+        //[1056, 1, 990, 256, 989, 990]
     }
 
     private int[][] parseInstructions(String fileName) throws IOException {
