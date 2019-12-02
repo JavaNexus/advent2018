@@ -6,8 +6,9 @@ import java.util.Map;
 public class IntcodeProgram {
 
     public static final int STEP = 4;
+    public static final int MAX_VALUE = 99;
 
-    enum Operation {
+    enum Instruction {
         ADD(1) {
             @Override
             public void execute(int[] input, int opcodeIndex) {
@@ -31,23 +32,23 @@ public class IntcodeProgram {
 
         private final int opcode;
 
-        Operation(int opcode) {
+        Instruction(int opcode) {
             this.opcode = opcode;
         }
 
-        private static final Map<Integer, Operation> opcodesMap = new HashMap<>();
+        private static final Map<Integer, Instruction> opcodesMap = new HashMap<>();
         static {
-            for (Operation operation : Operation.values()) {
-                opcodesMap.put(operation.getOpcode(), operation);
+            for (Instruction instruction : Instruction.values()) {
+                opcodesMap.put(instruction.getOpcode(), instruction);
             }
         }
 
-        public static Operation getOperation(int code) {
+        public static Instruction getInstruction(int opcode) {
             //TODO: get rid of autoboxing
-            if (opcodesMap.containsKey(code)) {
-                return opcodesMap.get(code);
+            if (opcodesMap.containsKey(opcode)) {
+                return opcodesMap.get(opcode);
             } else {
-                throw new RuntimeException("Unknown operation code: " + code);
+                throw new RuntimeException("Unknown operation code: " + opcode);
             }
         }
 
@@ -77,13 +78,36 @@ public class IntcodeProgram {
     }
 
     public void execute(int[] input) {
+
         int i = 0;
-        Operation operation;
+        Instruction instruction;
         do {
             int currentOpcode = input[i];
-            operation = Operation.getOperation(currentOpcode);
-            operation.execute(input, i);
+            instruction = Instruction.getInstruction(currentOpcode);
+            instruction.execute(input, i);
             i += STEP;
-        } while (operation != null && operation != Operation.HALT);
+        } while (instruction != null && instruction != Instruction.HALT);
+    }
+
+    public int findInput(int[] input, int expectedOutput) {
+        final int[] output = new int[input.length];
+
+        for (int noun = 0; noun < MAX_VALUE; noun++) {
+            for (int verb = 0; verb < MAX_VALUE; verb++) {
+                resetOutput(input, output, noun, verb);
+                execute(output);
+                if (output[0] == expectedOutput) {
+                    return 100 * noun + verb;
+                }
+            }
+        }
+
+        throw new RuntimeException("Could not find noun and verb that produces output: " + expectedOutput);
+    }
+
+    public void resetOutput(int[] input, int[] output, int noun, int verb) {
+        System.arraycopy(input, 0, output, 0, input.length);
+        output[1] = noun;
+        output[2] = verb;
     }
 }
