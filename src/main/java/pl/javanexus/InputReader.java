@@ -3,12 +3,23 @@ package pl.javanexus;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class InputReader {
+
+    public int[] readIntArray(String fileName) throws IOException {
+        try (BufferedReader reader = getReader(fileName)) {
+            String line = reader.readLine();
+            if (line != null) {
+                return Arrays.stream(line.split(",")).mapToInt(Integer::parseInt).toArray();
+            }
+        }
+
+        throw new RuntimeException("File is empty");
+    }
 
     public List<String> readStringValues(String fileName) throws IOException {
         return readValues(fileName, (index, value) -> value);
