@@ -103,10 +103,15 @@ public class CrossedWires {
 
     public Boundary findBoundary(String[] firstWire, String[] secondWire) {
         final Point centralPort = new Point(0, 0);
+        return findBoundary(
+                findPointsOnPath(centralPort, firstWire),
+                findPointsOnPath(centralPort, secondWire));
+    }
 
+    public Boundary findBoundary(List<Point> pointsOnFirstWire, List<Point> pointsOnSecondWire) {
         List<Point> points = new LinkedList<>();
-        points.addAll(findBoundary(centralPort, firstWire));
-        points.addAll(findBoundary(centralPort, secondWire));
+        points.addAll(pointsOnFirstWire);//findPointsOnPath(centralPort, firstWire)
+        points.addAll(pointsOnSecondWire);//findPointsOnPath(centralPort, secondWire)
 
         Boundary boundary = new Boundary();
         for (Point point : points) {
@@ -118,7 +123,7 @@ public class CrossedWires {
         return boundary;
     }
 
-    private List<Point> findBoundary(Point from, String[] wireDirections) {
+    private List<Point> findPointsOnPath(Point from, String[] wireDirections) {
         List<Point> points = new LinkedList<>();
         points.add(from);
 
@@ -139,8 +144,12 @@ public class CrossedWires {
     }
 
     public int readValues(String[] firstWire, String[] secondWire) {
-        Boundary boundary = findBoundary(firstWire, secondWire);
-        Point centralPort = boundary.getCentralPort();
+        Point centralPort = new Point(0, 0);
+        List<Point> pointsOnFirstPath = findPointsOnPath(centralPort, firstWire);
+        List<Point> pointsOnSecondPath = findPointsOnPath(centralPort, secondWire);
+
+        final Boundary boundary = findBoundary(pointsOnFirstPath, pointsOnSecondPath);
+        centralPort = boundary.getCentralPort();
 
         byte[][] grid = getGrid(boundary.getWidth() + 1, boundary.getHeight() + 1);
         grid[centralPort.getY()][centralPort.getX()] = 9;
@@ -150,13 +159,30 @@ public class CrossedWires {
         lieWire(grid, centralPort, firstWire, (byte)1, intersections);
         lieWire(grid, centralPort, secondWire, (byte)2, intersections);
 
+        int minDistance = -1;
+        int distance = 0;
+
+        Point previousPoint = centralPort;
+        Iterator<Point> pointsIterator = pointsOnFirstPath.iterator();
+        Iterator<Point> intersectionIterator = intersections.iterator();
+        Point intersection = intersectionIterator.next();
+
+        while (pointsIterator.hasNext() && intersectionIterator.hasNext()) {
+            Point nextPoint = pointsIterator.next();
+            if (intersection.isBetweenPoints(previousPoint, nextPoint, centralPort)) {
+               //todo: calculate distance
+            }
+            distance += nextPoint.getDistance(previousPoint);
+        }
+        System.out.println(distance);
+
         return findSmallestDistanceToIntersection(boundary, centralPort, intersections);
     }
 
     private int findSmallestDistanceToIntersection(Boundary boundary, Point centralPort, List<Point> intersections) {
         int smallestDistance = boundary.getWidth() + boundary.getHeight();
         for (Point intersection : intersections) {
-            if (!centralPort.equals(intersection)) {//centralPort[0] != intersection[0] && centralPort[1] != intersection[1]
+            if (!centralPort.equals(intersection)) {
                 int distance = intersection.getDistance(centralPort);
                 if (distance < smallestDistance) {
                     smallestDistance = distance;
@@ -165,6 +191,9 @@ public class CrossedWires {
         }
 
         return smallestDistance;
+    }
+
+    private void calculateDistanceToIntersection(byte[][] grid, Point from, String[] wireDirections) {
     }
 
     private void lieWire(byte[][] grid, Point from, String[] wireDirections, byte wireId, List<Point> intersections) {
