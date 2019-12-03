@@ -162,17 +162,25 @@ public class CrossedWires {
         int minDistance = -1;
         int distance = 0;
 
-        Point previousPoint = centralPort;
         Iterator<Point> pointsIterator = pointsOnFirstPath.iterator();
         Iterator<Point> intersectionIterator = intersections.iterator();
-        Point intersection = intersectionIterator.next();
+
+        Point previousPoint = pointsIterator.next();
+        Point intersection;
+        do {
+            intersection = intersectionIterator.next();
+        } while (intersection.equals(centralPort));
 
         while (pointsIterator.hasNext() && intersectionIterator.hasNext()) {
             Point nextPoint = pointsIterator.next();
             if (intersection.isBetweenPoints(previousPoint, nextPoint, centralPort)) {
-               //todo: calculate distance
+                intersection = intersectionIterator.next();
+                minDistance = distance += previousPoint.getDistance(intersection);
+                System.out.println("min distance to intersection: " + intersection + " = " + minDistance);
+                //todo: calculate distance
             }
             distance += nextPoint.getDistance(previousPoint);
+            previousPoint = nextPoint;
         }
         System.out.println(distance);
 

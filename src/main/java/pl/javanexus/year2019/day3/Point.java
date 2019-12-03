@@ -16,10 +16,10 @@ public class Point {
         int dX = x - centralPort.getX();
         int dY = y - centralPort.getY();
 
-        if (from.getX() == to.getX()) {
-            return dX >= from.getX() && dX < to.getX();
-        } else if (from.getY() == to.getY()) {
+        if (from.getX() == to.getX() && from.getX() == dX) {
             return dY >= from.getY() && dY < to.getY();
+        } else if (from.getY() == to.getY() && from.getY() == dY) {
+            return dX >= from.getX() && dX < to.getX();
         }
 
         return false;
