@@ -11,38 +11,58 @@ public class CrossedWires {
     enum Direction {
         RIGHT("R") {
             @Override
-            public int[] lieWire(byte[][] grid, int fromX, int fromY, int length, byte wireId, List<int[]> intersections) {
-                for (int x = fromX; x <= fromX + length; x++) {
-                    lieWire(grid, x, fromY, wireId, intersections);
+            public Point getTo(Point from, int wireLength) {
+                return new Point(from.getX() + wireLength, from.getY());
+            }
+
+            @Override
+            public Point lieWire(byte[][] grid, Point from, int length, byte wireId, List<Point> intersections) {
+                for (int x = from.getX(); x <= from.getX() + length; x++) {
+                    lieWire(grid, x, from.getY(), wireId, intersections);
                 }
-                return new int[] {fromX + length, fromY};
+                return getTo(from, length);
             }
         },
         LEFT("L") {
             @Override
-            public int[] lieWire(byte[][] grid, int fromX, int fromY, int length, byte wireId, List<int[]> intersections) {
-                for (int x = fromX; x >= fromX - length; x--) {
-                    lieWire(grid, x, fromY, wireId, intersections);
+            public Point getTo(Point from, int wireLength) {
+                return new Point(from.getX() - wireLength, from.getY());
+            }
+
+            @Override
+            public Point lieWire(byte[][] grid, Point from, int length, byte wireId, List<Point> intersections) {
+                for (int x = from.getX(); x >= from.getX() - length; x--) {
+                    lieWire(grid, x, from.getY(), wireId, intersections);
                 }
-                return new int[] {fromX - length, fromY};
+                return getTo(from, length);
             }
         },
         UP("U") {
             @Override
-            public int[] lieWire(byte[][] grid, int fromX, int fromY, int length, byte wireId, List<int[]> intersections) {
-                for (int y = fromY; y >= fromY - length; y--) {
-                    lieWire(grid, fromX, y, wireId, intersections);
+            public Point getTo(Point from, int wireLength) {
+                return new Point(from.getX(), from.getY() - wireLength);
+            }
+
+            @Override
+            public Point lieWire(byte[][] grid, Point from, int length, byte wireId, List<Point> intersections) {
+                for (int y = from.getY(); y >= from.getY() - length; y--) {
+                    lieWire(grid, from.getX(), y, wireId, intersections);
                 }
-                return new int[] {fromX, fromY - length};
+                return getTo(from, length);
             }
         },
         DOWN("D") {
             @Override
-            public int[] lieWire(byte[][] grid, int fromX, int fromY, int length, byte wireId, List<int[]> intersections) {
-                for (int y = fromY; y <= fromY + length; y++) {
-                    lieWire(grid, fromX, y, wireId, intersections);
+            public Point getTo(Point from, int wireLength) {
+                return new Point(from.getX(), from.getY() + wireLength);
+            }
+
+            @Override
+            public Point lieWire(byte[][] grid, Point from, int length, byte wireId, List<Point> intersections) {
+                for (int y = from.getY(); y <= from.getY() + length; y++) {
+                    lieWire(grid, from.getX(), y, wireId, intersections);
                 }
-                return new int[] {fromX, fromY + length};
+                return getTo(from, length);
             }
         };
 
@@ -67,11 +87,13 @@ public class CrossedWires {
             return symbol;
         }
 
-        public abstract int[] lieWire(byte[][] grid, int fromX, int fromY, int length, byte wireId, List<int[]> intersections);
+        public abstract Point getTo(Point from, int wireLength);
 
-        void lieWire(byte[][] grid, int x, int y, byte wireId, List<int[]> intersections) {
+        public abstract Point lieWire(byte[][] grid, Point from, int length, byte wireId, List<Point> intersections);
+
+        void lieWire(byte[][] grid, int x, int y, byte wireId, List<Point> intersections) {
             if (grid[y][x] != 0 && grid[y][x] != wireId) {
-                intersections.add(new int[] {x, y});
+                intersections.add(new Point(x, y));
                 grid[y][x] = 3;
             } else {
                 grid[y][x] = wireId;
@@ -79,47 +101,73 @@ public class CrossedWires {
         }
     }
 
-    public int readValues(String[] firstWire, String[] secondWire) {//byte[][]
-        Map<String, Integer> firstWireDimensions = getDimensions(firstWire);
-        Map<String, Integer> secondWireDimensions = getDimensions(secondWire);
+    public Boundary findBoundary(String[] firstWire, String[] secondWire) {
+        final Point centralPort = new Point(0, 0);
 
-        System.out.println(firstWireDimensions);
-        System.out.println(secondWireDimensions);
+        List<Point> points = new LinkedList<>();
+        points.addAll(findBoundary(centralPort, firstWire));
+        points.addAll(findBoundary(centralPort, secondWire));
 
-        int[] widthAndHeight = new int[] {500, 500};//new int[] {20, 20};//
-//        getWidthAndHeight(firstWireDimensions, secondWireDimensions);
-        //new int[] {1, 8};
-        int[] centralPort = new int [] {
-                Math.floorDiv(widthAndHeight[0], 2),
-                Math.floorDiv(widthAndHeight[1], 2)};
+        Boundary boundary = new Boundary();
+        for (Point point : points) {
+            boundary.update(point);
+        }
 
-        byte[][] grid = getGrid(widthAndHeight[0], widthAndHeight[1]);
-        grid[centralPort[1]][centralPort[0]] = 9;
+        System.out.println(boundary.getWidth() + " x " + boundary.getHeight());
 
-        List<int[]> intersections = new LinkedList();
+        return boundary;
+    }
+
+    private List<Point> findBoundary(Point from, String[] wireDirections) {
+        List<Point> points = new LinkedList<>();
+        points.add(from);
+
+        for (String wireDirection : wireDirections) {
+            Matcher matcher = INPUT_PATTERN.matcher(wireDirection);
+            if (matcher.find()) {
+                Direction direction = Direction.getDirection(matcher.group(1));
+                int length = Integer.parseInt(matcher.group(2));
+
+                from = direction.getTo(from, length);
+                points.add(from);
+            } else {
+                throw new RuntimeException("Unexpected input: " + wireDirection);
+            }
+        }
+
+        return points;
+    }
+
+    public int readValues(String[] firstWire, String[] secondWire) {
+        Boundary boundary = findBoundary(firstWire, secondWire);
+        Point centralPort = boundary.getCentralPort();
+
+        byte[][] grid = getGrid(boundary.getWidth() + 1, boundary.getHeight() + 1);
+        grid[centralPort.getY()][centralPort.getX()] = 9;
+//        printGrid(grid);
+
+        List<Point> intersections = new LinkedList();
         lieWire(grid, centralPort, firstWire, (byte)1, intersections);
         lieWire(grid, centralPort, secondWire, (byte)2, intersections);
 
-        int smallestDistance = widthAndHeight[0] + widthAndHeight[1];
-        for (int[] intersection : intersections) {
-            if (centralPort[0] != intersection[0] && centralPort[1] != intersection[1]) {
-                int distance = Math.abs(intersection[0] - centralPort[0]) + Math.abs(intersection[0] - centralPort[0]);
-                System.out.println(Arrays.toString(intersection) + " : " + distance);
+        return findSmallestDistanceToIntersection(boundary, centralPort, intersections);
+    }
+
+    private int findSmallestDistanceToIntersection(Boundary boundary, Point centralPort, List<Point> intersections) {
+        int smallestDistance = boundary.getWidth() + boundary.getHeight();
+        for (Point intersection : intersections) {
+            if (!centralPort.equals(intersection)) {//centralPort[0] != intersection[0] && centralPort[1] != intersection[1]
+                int distance = intersection.getDistance(centralPort);
                 if (distance < smallestDistance) {
                     smallestDistance = distance;
                 }
             }
         }
 
-//        intersections.stream().forEach(i -> System.out.println(Arrays.toString(i)));
-
-        System.out.println(smallestDistance);
-        printGrid(grid);
-
-        return smallestDistance;//grid;
+        return smallestDistance;
     }
 
-    private void lieWire(byte[][] grid, int[] from, String[] wireDirections, byte wireId, List<int[]> intersections) {
+    private void lieWire(byte[][] grid, Point from, String[] wireDirections, byte wireId, List<Point> intersections) {
         for (String wireDirection : wireDirections) {
 //            System.out.println(wireId + " : " + wireDirection);
             Matcher matcher = INPUT_PATTERN.matcher(wireDirection);
@@ -127,7 +175,7 @@ public class CrossedWires {
                 Direction direction = Direction.getDirection(matcher.group(1));
                 int length = Integer.parseInt(matcher.group(2));
 
-                from = direction.lieWire(grid, from[0], from[1], length, wireId, intersections);
+                from = direction.lieWire(grid, from, length, wireId, intersections);
             } else {
                 throw new RuntimeException("Unexpected input: " + wireDirection);
             }
