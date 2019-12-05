@@ -1,6 +1,7 @@
 package pl.javanexus.year2019.day5;
 
-import java.util.Arrays;
+import lombok.Data;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,39 +50,91 @@ public class DiagnosticProgram {
     enum Instruction {
         ADD(1, 4) {
             @Override
-            public void execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes) {
+            public int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
                 int result = getFirstArgument(instructions, opcodeIndex, parameterModes)
                         + getSecondArgument(instructions, opcodeIndex, parameterModes);
                 setResult(instructions, opcodeIndex, result);
+
+                return opcodeIndex + getStep();
             }
         },
         MULTIPLY(2, 4) {
             @Override
-            public void execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes) {
+            public int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
                 int result = getFirstArgument(instructions, opcodeIndex, parameterModes)
                         * getSecondArgument(instructions, opcodeIndex, parameterModes);
                 setResult(instructions, opcodeIndex, result);
+
+                return opcodeIndex + getStep();
             }
         },
         INPUT(3, 2) {
             @Override
-            void execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes) {
-                //getFirstArgument(instructions, opcodeIndex);
-                //todo: add input array
-                setResult(instructions, opcodeIndex, 1);
+            int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
+                setResult(instructions, opcodeIndex, state.getInput());
+
+                return opcodeIndex + getStep();
             }
         },
         OUTPUT(4, 2) {
             @Override
-            void execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes) {
-                //todo: add output array
-                System.out.println("OUTPUT: " + getFirstArgument(instructions, opcodeIndex, parameterModes));
+            int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
+                int output = getFirstArgument(instructions, opcodeIndex, parameterModes);
+                state.setOutput(output);
+                System.out.println("OUTPUT: " + output);
+
+                return opcodeIndex + getStep();
+            }
+        },
+        JUMP_IF_TRUE(5, 3) {
+            @Override
+            int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
+                int firstArgument = getFirstArgument(instructions, opcodeIndex, parameterModes);
+                if (firstArgument != 0) {
+                    return getSecondArgument(instructions, opcodeIndex, parameterModes);
+                }
+                return opcodeIndex + getStep();
+            }
+        },
+        JUMP_IF_FALSE(6, 3) {
+            @Override
+            int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
+                int firstArgument = getFirstArgument(instructions, opcodeIndex, parameterModes);
+                if (firstArgument == 0) {
+                    return getSecondArgument(instructions, opcodeIndex, parameterModes);
+                }
+                return opcodeIndex + getStep();
+            }
+        },
+        LESS_THAN(7, 4) {
+            @Override
+            int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
+                int firstArgument = getFirstArgument(instructions, opcodeIndex, parameterModes);
+                int secondArgument = getSecondArgument(instructions, opcodeIndex, parameterModes);
+
+                int result = firstArgument < secondArgument ? 1 : 0;
+                setResult(instructions, opcodeIndex, result);
+
+                return opcodeIndex + getStep();
+            }
+        },
+        EQUALS(8, 4) {
+            @Override
+            int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
+                int firstArgument = getFirstArgument(instructions, opcodeIndex, parameterModes);
+                int secondArgument = getSecondArgument(instructions, opcodeIndex, parameterModes);
+
+                int result = firstArgument == secondArgument ? 1 : 0;
+                setResult(instructions, opcodeIndex, result);
+
+                return opcodeIndex + getStep();
             }
         },
         HALT(99, 0) {
             @Override
-            public void execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes) {
+            public int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
                 //halt and catch fire
+                return opcodeIndex + getStep();
             }
         };
 
@@ -109,7 +162,7 @@ public class DiagnosticProgram {
             }
         }
 
-        abstract void execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes);
+        abstract int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state);
 
         int getFirstArgument(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes) {
             return getArgument(instructions, opcodeIndex, parameterModes, 1);
@@ -145,19 +198,22 @@ public class DiagnosticProgram {
         }
     }
 
-    public void execute(int[] input) {
+    public State execute(int[] originalInstructions, int input) {
+        final State state = new State(input, originalInstructions);
+        int[] instructions = state.getInstructions();
 
         int i = 0;
         Instruction instruction;
         do {
-            int value = input[i];
+            int value = instructions[i];
             int opcode = value % 100;
             int parameterModes = value / 100;
 
             instruction = Instruction.getInstruction(opcode);
-            instruction.execute(input, i, getParameterModes(parameterModes));
-            i += instruction.getStep();
+            i = instruction.execute(instructions, i, getParameterModes(parameterModes), state);
         } while (instruction != null && instruction != Instruction.HALT);
+
+        return state;
     }
 
     private ParameterMode[] getParameterModes(int parameterModes) {
@@ -192,5 +248,23 @@ public class DiagnosticProgram {
         }
 
         return numberOfDigits;
+    }
+
+    @Data
+    public static class State {
+
+        private final int[] instructions;
+        private final int input;
+        private int output;
+
+        public State(int input, int[] originalInstructions) {
+            this.input = input;
+            this.instructions = new int[originalInstructions.length];
+            System.arraycopy(originalInstructions, 0, instructions, 0, originalInstructions.length);
+        }
+
+        public int getInstruction(int index) {
+            return instructions[index];
+        }
     }
 }
