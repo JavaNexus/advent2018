@@ -25,11 +25,26 @@ public class OrbitMapTest {
         testOrbitMap("year2019/day6/input1.csv", 295936);
     }
 
+    @Test
+    public void testGetMinNumberOfOrbitalTransfers() throws IOException {
+        OrbitMap orbitMap = getOrbitMap("year2019/day6/input_transfers.csv");
+        assertEquals(4, orbitMap.getMinNumberOfOrbitalTransfers("YOU", "SAN"));
+
+        orbitMap = getOrbitMap("year2019/day6/input1.csv");
+        assertEquals(457, orbitMap.getMinNumberOfOrbitalTransfers("YOU", "SAN"));
+    }
+
     private void testOrbitMap(String filePath, int expectedTotalNumberOfOrbits) throws IOException {
-        List<String> input = inputReader.readStringValues(filePath);
+        OrbitMap orbitMap = getOrbitMap(filePath);
+        assertEquals(expectedTotalNumberOfOrbits, orbitMap.getTotalNumberOfOrbits());
+    }
+
+    private OrbitMap getOrbitMap(String inputFilePath) throws IOException {
+        List<String> input = inputReader.readStringValues(inputFilePath);
 
         OrbitMap orbitMap = new OrbitMap();
         orbitMap.readInput(input);
-        assertEquals(expectedTotalNumberOfOrbits, orbitMap.getTotalNumberOfOrbits());
+
+        return orbitMap;
     }
 }
