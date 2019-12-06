@@ -1,4 +1,4 @@
-package pl.javanexus.year2019.day5;
+package pl.javanexus.year2019.day6;
 
 import org.junit.Before;
 import org.junit.Test;
