@@ -81,7 +81,7 @@ public class DiagnosticProgram {
             int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
                 int output = getFirstArgument(instructions, opcodeIndex, parameterModes);
                 state.setOutput(output);
-                System.out.println("OUTPUT: " + output);
+//                System.out.println("OUTPUT: " + output);
 
                 return opcodeIndex + getStep();
             }
@@ -199,6 +199,10 @@ public class DiagnosticProgram {
     }
 
     public State execute(int[] originalInstructions, int input) {
+        return execute(originalInstructions, new int[] {input});
+    }
+
+    public State execute(int[] originalInstructions, int[] input) {
         final State state = new State(input, originalInstructions);
         int[] instructions = state.getInstructions();
 
@@ -254,10 +258,12 @@ public class DiagnosticProgram {
     public static class State {
 
         private final int[] instructions;
-        private final int input;
+        private final int[] input;
         private int output;
 
-        public State(int input, int[] originalInstructions) {
+        private int inputIndex = 0;
+
+        public State(int[] input, int[] originalInstructions) {
             this.input = input;
             this.instructions = new int[originalInstructions.length];
             System.arraycopy(originalInstructions, 0, instructions, 0, originalInstructions.length);
@@ -265,6 +271,10 @@ public class DiagnosticProgram {
 
         public int getInstruction(int index) {
             return instructions[index];
+        }
+
+        public int getInput() {
+            return input[inputIndex++ % input.length];
         }
     }
 }
