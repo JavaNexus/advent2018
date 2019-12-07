@@ -71,9 +71,16 @@ public class DiagnosticProgram {
         INPUT(3, 2) {
             @Override
             int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
-                setResult(instructions, opcodeIndex, state.getInput());
+                if (state.isInputAvailable()) {
+                    int input = state.getInput();
+                    setResult(instructions, opcodeIndex, input);
+                    System.out.println(" >: INPUT: " + input);
 
-                return opcodeIndex + getStep();
+                    return opcodeIndex + getStep();
+                } else {
+                    //TODO: if no input was read then return opcodeIndex;
+                    return opcodeIndex;
+                }
             }
         },
         OUTPUT(4, 2) {
@@ -81,7 +88,7 @@ public class DiagnosticProgram {
             int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
                 int output = getFirstArgument(instructions, opcodeIndex, parameterModes);
                 state.setOutput(output);
-//                System.out.println("OUTPUT: " + output);
+                System.out.println(" >: OUTPUT: " + output);
 
                 return opcodeIndex + getStep();
             }
@@ -134,6 +141,8 @@ public class DiagnosticProgram {
             @Override
             public int execute(int[] instructions, int opcodeIndex, ParameterMode[] parameterModes, State state) {
                 //halt and catch fire
+                state.setFinished(true);
+
                 return opcodeIndex + getStep();
             }
         };
@@ -203,19 +212,26 @@ public class DiagnosticProgram {
     }
 
     public State execute(int[] originalInstructions, int[] input) {
-        final State state = new State(input, originalInstructions);
+        return execute(new State(input, originalInstructions));
+    }
+
+    public State execute(State state) {
         int[] instructions = state.getInstructions();
 
-        int i = 0;
         Instruction instruction;
+        int instructionIndex = state.getInstructionIndex();
+        int previousInstructionIndex;
         do {
-            int value = instructions[i];
+            previousInstructionIndex = instructionIndex;
+
+            int value = instructions[instructionIndex];
             int opcode = value % 100;
             int parameterModes = value / 100;
 
             instruction = Instruction.getInstruction(opcode);
-            i = instruction.execute(instructions, i, getParameterModes(parameterModes), state);
-        } while (instruction != null && instruction != Instruction.HALT);
+            instructionIndex = instruction.execute(instructions, instructionIndex, getParameterModes(parameterModes), state);
+        } while (instruction != null && instruction != Instruction.HALT && instructionIndex != previousInstructionIndex);
+        state.setInstructionIndex(instructionIndex);
 
         return state;
     }
@@ -258,9 +274,13 @@ public class DiagnosticProgram {
     public static class State {
 
         private final int[] instructions;
-        private final int[] input;
+        private int[] input;
         private int output;
 
+        private boolean isFinished = false;
+        private boolean hasOutput = false;
+
+        private int instructionIndex = 0;
         private int inputIndex = 0;
 
         public State(int[] input, int[] originalInstructions) {
@@ -273,8 +293,26 @@ public class DiagnosticProgram {
             return instructions[index];
         }
 
+        public boolean isInputAvailable() {
+            return inputIndex < input.length;
+        }
+
         public int getInput() {
-            return input[inputIndex++ % input.length];
+            return input[inputIndex++];
+        }
+
+        public void setInput(int input) {
+            this.input = new int[] {input};
+            this.inputIndex = 0;
+        }
+
+        public void updateInput(int input) {
+            this.input[1] = input;
+        }
+
+        public void setOutput(int output) {
+            this.output = output;
+            this.hasOutput = true;
         }
     }
 }
