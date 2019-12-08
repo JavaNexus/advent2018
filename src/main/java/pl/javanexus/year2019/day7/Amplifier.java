@@ -1,4 +1,4 @@
-package pl.javanexus.year2019;
+package pl.javanexus.year2019.day7;
 
 import com.google.common.collect.Collections2;
 import pl.javanexus.year2019.day5.DiagnosticProgram;
@@ -15,45 +15,41 @@ public class Amplifier {
         this.program = new DiagnosticProgram();
     }
 
-    public int execute(int[] instructions, int[] phaseSettings, int input) {
+    public int execute(int[] instructions, int[] phaseSettings, int initialInput) {
+        DiagnosticProgram.State[] states = getInitialStates(instructions, phaseSettings);
+        states[0].addInput(initialInput);
+
         for (int i = 0; i < phaseSettings.length; i++) {
-            DiagnosticProgram.State state = program.execute(instructions, new int[]{phaseSettings[i], input});
-            input = state.getOutput();
-        }
-
-        return input;
-    }
-
-    public int executeInFeedbackLoop(int[] instructions, int[] phaseSettings, int input) {
-        DiagnosticProgram.State[] states = getInitialStates(instructions, phaseSettings, input);
-
-        int loopIndex = 0;;
-        int numberOfFinishedAmplifiers = 0;
-        while (numberOfFinishedAmplifiers < phaseSettings.length) {
-            System.out.println("LOOP:" + loopIndex);
-            for (int i = 0; i < phaseSettings.length; i++) {
-                System.out.println("STATE:" + i);
-                DiagnosticProgram.State state = program.execute(states[i]);
-                if (loopIndex > 0 || i + 1 >= phaseSettings.length) {
-                    states[(i + 1) % phaseSettings.length].setInput(state.getOutput());
-                } else {
-                    states[(i + 1) % phaseSettings.length].updateInput(state.getOutput());
-                }
-
-                if (state.isFinished()) {
-                    numberOfFinishedAmplifiers++;
-                }
-            }
-            loopIndex++;
+            DiagnosticProgram.State state = program.execute(states[i]);
+            states[(i + 1) % phaseSettings.length].addInput(state.getOutput());
         }
 
         return states[phaseSettings.length - 1].getOutput();
     }
 
-    private DiagnosticProgram.State[] getInitialStates(int[] instructions, int[] phaseSettings, int initialInput) {
+    public int executeInFeedbackLoop(int[] instructions, int[] phaseSettings, int initialInput) {
+        DiagnosticProgram.State[] states = getInitialStates(instructions, phaseSettings);
+        states[0].addInput(initialInput);
+
+        int numberOfFinishedAmplifiers = 0;
+        while (numberOfFinishedAmplifiers < phaseSettings.length) {
+            for (int i = 0; i < phaseSettings.length; i++) {
+                DiagnosticProgram.State state = program.execute(states[i]);
+                states[(i + 1) % phaseSettings.length].addInput(state.getOutput());
+
+                if (state.isFinished()) {
+                    numberOfFinishedAmplifiers++;
+                }
+            }
+        }
+
+        return states[phaseSettings.length - 1].getOutput();
+    }
+
+    private DiagnosticProgram.State[] getInitialStates(int[] instructions, int[] phaseSettings) {
         DiagnosticProgram.State[] states = new DiagnosticProgram.State[phaseSettings.length];
         for (int i = 0; i < states.length; i++) {
-            states[i] = new DiagnosticProgram.State(new int[] {phaseSettings[i], initialInput}, instructions);
+            states[i] = new DiagnosticProgram.State(phaseSettings[i], instructions);
         }
 
         return states;

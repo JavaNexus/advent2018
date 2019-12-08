@@ -2,8 +2,7 @@ package pl.javanexus.year2019.day5;
 
 import lombok.Data;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class DiagnosticProgram {
 
@@ -208,10 +207,6 @@ public class DiagnosticProgram {
     }
 
     public State execute(int[] originalInstructions, int input) {
-        return execute(originalInstructions, new int[] {input});
-    }
-
-    public State execute(int[] originalInstructions, int[] input) {
         return execute(new State(input, originalInstructions));
     }
 
@@ -274,17 +269,18 @@ public class DiagnosticProgram {
     public static class State {
 
         private final int[] instructions;
-        private int[] input;
+        private final Queue<Integer> inputQueue;
         private int output;
 
         private boolean isFinished = false;
         private boolean hasOutput = false;
 
         private int instructionIndex = 0;
-        private int inputIndex = 0;
 
-        public State(int[] input, int[] originalInstructions) {
-            this.input = input;
+        public State(int phaseSetting, int[] originalInstructions) {
+            this.inputQueue = new LinkedList<>();
+            inputQueue.offer(phaseSetting);
+
             this.instructions = new int[originalInstructions.length];
             System.arraycopy(originalInstructions, 0, instructions, 0, originalInstructions.length);
         }
@@ -294,20 +290,15 @@ public class DiagnosticProgram {
         }
 
         public boolean isInputAvailable() {
-            return inputIndex < input.length;
+            return !inputQueue.isEmpty();
         }
 
         public int getInput() {
-            return input[inputIndex++];
+            return inputQueue.poll();
         }
 
-        public void setInput(int input) {
-            this.input = new int[] {input};
-            this.inputIndex = 0;
-        }
-
-        public void updateInput(int input) {
-            this.input[1] = input;
+        public void addInput(int input) {
+            this.inputQueue.offer(input);
         }
 
         public void setOutput(int output) {

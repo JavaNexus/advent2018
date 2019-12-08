@@ -3,7 +3,6 @@ package pl.javanexus.year2019.day7;
 import org.junit.Before;
 import org.junit.Test;
 import pl.javanexus.InputReader;
-import pl.javanexus.year2019.Amplifier;
 
 import java.io.IOException;
 
@@ -39,8 +38,17 @@ public class AmplifierTest {
     @Test
     public void testFindHighestSignal() throws IOException {
         int[] instructions = inputReader.readIntArray("year2019/day7/input1.csv");
-        int highestSignal = amplifier.findHighestSignal(instructions, new int[]{9, 7, 8, 5, 6}, 0);//new int[]{0, 1, 2, 3, 4}
-        assertEquals(-1, highestSignal);
+        int highestSignal = amplifier.findHighestSignal(instructions, new int[]{0, 1, 2, 3, 4}, 0);
+
+        assertEquals(43812, highestSignal);
+    }
+
+    @Test
+    public void testFindHighestSignalWithFeedbackLoop() throws IOException {
+        int[] instructions = inputReader.readIntArray("year2019/day7/input1.csv");
+        int highestSignal = amplifier.findHighestSignal(instructions, new int[]{9, 7, 8, 5, 6}, 0);
+
+        assertEquals(59597414, highestSignal);
     }
 
     @Test
