@@ -22,7 +22,7 @@ public class DiagnosticProgramTest {
 
     @Test
     public void testInstruction() throws IOException {
-        int[] operations = inputReader.readIntArray("year2019/day5/input1.csv");
+        int[] operations = inputReader.readIntArray("year2019/day5/input1.csv", ",");
         DiagnosticProgram.State state = program.execute(operations, 1);
         assertEquals(15426686, state.getOutput());
 

@@ -37,7 +37,7 @@ public class AmplifierTest {
 
     @Test
     public void testFindHighestSignal() throws IOException {
-        int[] instructions = inputReader.readIntArray("year2019/day7/input1.csv");
+        int[] instructions = inputReader.readIntArray("year2019/day7/input1.csv", ",");
         int highestSignal = amplifier.findHighestSignal(instructions, new int[]{0, 1, 2, 3, 4}, 0);
 
         assertEquals(43812, highestSignal);
@@ -45,7 +45,7 @@ public class AmplifierTest {
 
     @Test
     public void testFindHighestSignalWithFeedbackLoop() throws IOException {
-        int[] instructions = inputReader.readIntArray("year2019/day7/input1.csv");
+        int[] instructions = inputReader.readIntArray("year2019/day7/input1.csv", ",");
         int highestSignal = amplifier.findHighestSignal(instructions, new int[]{9, 7, 8, 5, 6}, 0);
 
         assertEquals(59597414, highestSignal);

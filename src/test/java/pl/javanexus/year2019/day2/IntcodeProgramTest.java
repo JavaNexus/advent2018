@@ -69,6 +69,6 @@ public class IntcodeProgramTest {
     }
 
     private int[] getInput() throws IOException {
-        return inputReader.readIntArray("year2019/day2/input1.csv");
+        return inputReader.readIntArray("year2019/day2/input1.csv", ",");
     }
 }

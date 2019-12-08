@@ -10,11 +10,11 @@ import java.util.function.BiFunction;
 
 public class InputReader {
 
-    public int[] readIntArray(String fileName) throws IOException {
+    public int[] readIntArray(String fileName, String delimiter) throws IOException {
         try (BufferedReader reader = getReader(fileName)) {
             String line = reader.readLine();
             if (line != null) {
-                return Arrays.stream(line.split(",")).mapToInt(Integer::parseInt).toArray();
+                return Arrays.stream(line.split(delimiter)).mapToInt(Integer::parseInt).toArray();
             }
         }
 
