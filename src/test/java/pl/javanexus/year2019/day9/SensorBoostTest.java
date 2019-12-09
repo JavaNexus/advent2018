@@ -50,6 +50,14 @@ public class SensorBoostTest {
         assertEquals(2351176124L, state.getOutput());
     }
 
+    @Test
+    public void testDistressCallBoost() throws IOException {
+        long[] instructions = inputReader.readLongArray("year2019/day9/input1.csv", ",");
+        DiagnosticProgram.State state = new DiagnosticProgram.State(2, instructions);
+        program.execute(state);
+        assertEquals(73110L, state.getOutput());
+    }
+
     private DiagnosticProgram.State getState(long[] instructions) {
         return new DiagnosticProgram.State(instructions);
     }
