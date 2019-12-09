@@ -7,27 +7,33 @@ import java.util.*;
 
 public class DiagnosticProgram {
 
-    public static final int MAX_VALUE = 99;
+    private static void logCasting(long value) {
+        if (value >= Integer.MAX_VALUE) {
+            System.out.println(" >: CAST: " + value + " to: " + ((int) (value)));
+        }
+    }
 
     enum ParameterMode {
         POSITION(0) {
             @Override
-            int getArgument(State state, int opcodeIndex, int offset) {
-                int argumentIndex = state.getInstruction(opcodeIndex + offset);
-                return state.getInstruction(argumentIndex);
+            int getArgumentIndex(State state, int opcodeIndex, int offset) {
+                long argumentIndex = state.getInstruction(opcodeIndex + offset);
+                logCasting(argumentIndex);
+                return (int)argumentIndex;
             }
         },
         IMMEDIATE(1) {
             @Override
-            int getArgument(State state, int opcodeIndex, int offset) {
-                return state.getInstruction(opcodeIndex + offset);
+            int getArgumentIndex(State state, int opcodeIndex, int offset) {
+                return opcodeIndex + offset;
             }
         },
         RELATIVE(2) {
             @Override
-            int getArgument(State state, int opcodeIndex, int offset) {
-                int relativeOffset = state.getInstruction(opcodeIndex + offset);
-                return state.getInstruction(state.getRelativeBase() + relativeOffset);
+            int getArgumentIndex(State state, int opcodeIndex, int offset) {
+                long relativeOffset = state.getInstruction(opcodeIndex + offset);
+                logCasting(state.getRelativeBase() + relativeOffset);
+                return (int)(state.getRelativeBase() + relativeOffset);
             }
         };
 
@@ -51,16 +57,16 @@ public class DiagnosticProgram {
             this.code = code;
         }
 
-        abstract int getArgument(State state, int opcodeIndex, int offset);
+        abstract int getArgumentIndex(State state, int opcodeIndex, int offset);
     }
 
     enum Instruction {
         ADD(1, 4) {
             @Override
             public int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int result = getFirstArgument(state, opcodeIndex, parameterModes)
+                long result = getFirstArgument(state, opcodeIndex, parameterModes)
                         + getSecondArgument(state, opcodeIndex, parameterModes);
-                setResult(state.getInstructions(), opcodeIndex, result);
+                setResult(state, opcodeIndex, parameterModes, result);
 
                 return opcodeIndex + getStep();
             }
@@ -68,9 +74,9 @@ public class DiagnosticProgram {
         MULTIPLY(2, 4) {
             @Override
             public int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int result = getFirstArgument(state, opcodeIndex, parameterModes)
+                long result = getFirstArgument(state, opcodeIndex, parameterModes)
                         * getSecondArgument(state, opcodeIndex, parameterModes);
-                setResult(state.getInstructions(), opcodeIndex, result);
+                setResult(state, opcodeIndex, parameterModes, result);
 
                 return opcodeIndex + getStep();
             }
@@ -79,8 +85,8 @@ public class DiagnosticProgram {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
                 if (state.isInputAvailable()) {
-                    int input = state.getInput();
-                    setResult(state.getInstructions(), opcodeIndex, input);
+                    long input = state.getInput();
+                    setResult(state, opcodeIndex, parameterModes, input);
                     System.out.println(" >: INPUT: " + input);
 
                     return opcodeIndex + getStep();
@@ -93,7 +99,7 @@ public class DiagnosticProgram {
         OUTPUT(4, 2) {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int output = getFirstArgument(state, opcodeIndex, parameterModes);
+                long output = getFirstArgument(state, opcodeIndex, parameterModes);
                 state.setOutput(output);
                 System.out.println(" >: OUTPUT: " + output);
 
@@ -103,9 +109,11 @@ public class DiagnosticProgram {
         JUMP_IF_TRUE(5, 3) {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
+                long firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
                 if (firstArgument != 0) {
-                    return getSecondArgument(state, opcodeIndex, parameterModes);
+                    long secondArgument = getSecondArgument(state, opcodeIndex, parameterModes);
+                    logCasting(secondArgument);
+                    return (int) secondArgument;
                 }
                 return opcodeIndex + getStep();
             }
@@ -113,9 +121,11 @@ public class DiagnosticProgram {
         JUMP_IF_FALSE(6, 3) {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
+                long firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
                 if (firstArgument == 0) {
-                    return getSecondArgument(state, opcodeIndex, parameterModes);
+                    long secondArgument = getSecondArgument(state, opcodeIndex, parameterModes);
+                    logCasting(secondArgument);
+                    return (int) secondArgument;
                 }
                 return opcodeIndex + getStep();
             }
@@ -123,11 +133,11 @@ public class DiagnosticProgram {
         LESS_THAN(7, 4) {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
-                int secondArgument = getSecondArgument(state, opcodeIndex, parameterModes);
+                long firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
+                long secondArgument = getSecondArgument(state, opcodeIndex, parameterModes);
 
                 int result = firstArgument < secondArgument ? 1 : 0;
-                setResult(state.getInstructions(), opcodeIndex, result);
+                setResult(state, opcodeIndex, parameterModes, result);
 
                 return opcodeIndex + getStep();
             }
@@ -135,11 +145,11 @@ public class DiagnosticProgram {
         EQUALS(8, 4) {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
-                int secondArgument = getSecondArgument(state, opcodeIndex, parameterModes);
+                long firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
+                long secondArgument = getSecondArgument(state, opcodeIndex, parameterModes);
 
                 int result = firstArgument == secondArgument ? 1 : 0;
-                setResult(state.getInstructions(), opcodeIndex, result);
+                setResult(state, opcodeIndex, parameterModes, result);
 
                 return opcodeIndex + getStep();
             }
@@ -147,7 +157,7 @@ public class DiagnosticProgram {
         ADJUST_BASE(9, 2) {
             @Override
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
-                int firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
+                long firstArgument = getFirstArgument(state, opcodeIndex, parameterModes);
                 state.adjustRelativeBase(firstArgument);
 
                 return opcodeIndex + getStep();
@@ -189,17 +199,17 @@ public class DiagnosticProgram {
 
         abstract int execute(State state, int opcodeIndex, ParameterMode[] parameterModes);
 
-        int getFirstArgument(State state, int opcodeIndex, ParameterMode[] parameterModes) {
+        long getFirstArgument(State state, int opcodeIndex, ParameterMode[] parameterModes) {
             return getArgument(state, opcodeIndex, parameterModes, 1);
         }
 
-        int getSecondArgument(State state, int opcodeIndex, ParameterMode[] parameterModes) {
+        long getSecondArgument(State state, int opcodeIndex, ParameterMode[] parameterModes) {
             return getArgument(state, opcodeIndex, parameterModes, 2);
         }
 
-        int getArgument(State state, int opcodeIndex, ParameterMode[] parameterModes, int argumentIndex) {
+        long getArgument(State state, int opcodeIndex, ParameterMode[] parameterModes, int argumentIndex) {
             ParameterMode parameterMode = getParameterMode(parameterModes, argumentIndex - 1);
-            return parameterMode.getArgument(state, opcodeIndex, argumentIndex);
+            return state.getInstruction(parameterMode.getArgumentIndex(state, opcodeIndex, argumentIndex));
         }
 
         private ParameterMode getParameterMode(ParameterMode[] modes, int argumentIndex) {
@@ -209,9 +219,10 @@ public class DiagnosticProgram {
             return modes[argumentIndex];
         }
 
-        void setResult(int[] input, int opcodeIndex, int result) {
-            int resultIndex = input[opcodeIndex + step - 1];
-            input[resultIndex] = result;
+        void setResult(State state, int opcodeIndex, ParameterMode[] parameterModes, long result) {
+            ParameterMode parameterMode = getParameterMode(parameterModes, step - 2);
+            int resultIndex = parameterMode.getArgumentIndex(state, opcodeIndex, step - 1);
+            state.setInstruction(resultIndex, result);
         }
 
         public int getOpcode() {
@@ -223,7 +234,7 @@ public class DiagnosticProgram {
         }
     }
 
-    public State execute(int[] originalInstructions, int input) {
+    public State execute(long[] originalInstructions, long input) {
         return execute(new State(input, originalInstructions));
     }
 
@@ -234,9 +245,10 @@ public class DiagnosticProgram {
         do {
             previousInstructionIndex = instructionIndex;
 
-            int value = state.getInstruction(instructionIndex);
-            int opcode = value % 100;
-            int parameterModes = value / 100;
+            long value = state.getInstruction(instructionIndex);
+            logCasting(value % 100);
+            int opcode = (int) (value % 100);
+            long parameterModes = value / 100;
 
             instruction = Instruction.getInstruction(opcode);
             instructionIndex = instruction.execute(state, instructionIndex, getParameterModes(parameterModes));
@@ -246,7 +258,7 @@ public class DiagnosticProgram {
         return state;
     }
 
-    private ParameterMode[] getParameterModes(int parameterModes) {
+    private ParameterMode[] getParameterModes(long parameterModes) {
         int numberOfDigits = getNumberOfDigits(parameterModes);
         int[] digits = getDigits(parameterModes, numberOfDigits);
 
@@ -258,11 +270,11 @@ public class DiagnosticProgram {
         return modes;
     }
 
-    private int[] getDigits(int value, int numberOfDigits) {
+    private int[] getDigits(long value, int numberOfDigits) {
         int[] digits = new int[numberOfDigits];
 
         while (numberOfDigits > 0) {
-            digits[digits.length - numberOfDigits] =  value % 10;
+            digits[digits.length - numberOfDigits] = (int)(value % 10);
             value /= 10;
             numberOfDigits--;
         }
@@ -270,7 +282,7 @@ public class DiagnosticProgram {
         return digits;
     }
 
-    private int getNumberOfDigits(int value) {
+    private int getNumberOfDigits(long value) {
         int numberOfDigits = 0;
         while (value > 0) {
             value /= 10;
@@ -285,34 +297,34 @@ public class DiagnosticProgram {
 
         public static final int BUFFER_SIZE = 100000;
 
-        private final int[] instructions;
-        private final Queue<Integer> inputQueue;
-        private int output;
+        private final long[] instructions;
+        private final Queue<Long> inputQueue;
+        private long output;
         @Getter
-        private int relativeBase = 0;
+        private long relativeBase = 0;
 
         private boolean isFinished = false;
         private boolean hasOutput = false;
 
         private int instructionIndex = 0;
 
-        public State(int[] originalInstructions) {
+        public State(long[] originalInstructions) {
             this.inputQueue = new LinkedList<>();
-            this.instructions = new int[BUFFER_SIZE];
+            this.instructions = new long[BUFFER_SIZE];
             Arrays.fill(instructions, 0);
             System.arraycopy(originalInstructions, 0, instructions, 0, originalInstructions.length);
         }
 
-        public State(int phaseSetting, int[] originalInstructions) {
+        public State(long input, long[] originalInstructions) {
             this(originalInstructions);
-            inputQueue.offer(phaseSetting);
+            inputQueue.offer(input);
         }
 
-        public void setInstruction(int index, int value) {
+        public void setInstruction(int index, long value) {
             instructions[index] = value;
         }
 
-        public int getInstruction(int index) {
+        public long getInstruction(int index) {
             return instructions[index];
         }
 
@@ -320,20 +332,20 @@ public class DiagnosticProgram {
             return !inputQueue.isEmpty();
         }
 
-        public int getInput() {
+        public long getInput() {
             return inputQueue.poll();
         }
 
-        public void addInput(int input) {
+        public void addInput(long input) {
             this.inputQueue.offer(input);
         }
 
-        public void setOutput(int output) {
+        public void setOutput(long output) {
             this.output = output;
             this.hasOutput = true;
         }
 
-        public void adjustRelativeBase(int value) {
+        public void adjustRelativeBase(long value) {
             this.relativeBase += value;
         }
     }

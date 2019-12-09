@@ -7,14 +7,23 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 public class InputReader {
 
+    public long[] readLongArray(String fileName, String delimiter) throws IOException {
+        return getValuesStream(fileName, delimiter).mapToLong(Long::parseLong).toArray();
+    }
+
     public int[] readIntArray(String fileName, String delimiter) throws IOException {
+        return getValuesStream(fileName, delimiter).mapToInt(Integer::parseInt).toArray();
+    }
+
+    private Stream<String> getValuesStream(String fileName, String delimiter) throws IOException {
         try (BufferedReader reader = getReader(fileName)) {
             String line = reader.readLine();
             if (line != null) {
-                return Arrays.stream(line.split(delimiter)).mapToInt(Integer::parseInt).toArray();
+                return Arrays.stream(line.split(delimiter));
             }
         }
 

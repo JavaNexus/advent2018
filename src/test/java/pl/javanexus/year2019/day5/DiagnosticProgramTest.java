@@ -22,7 +22,7 @@ public class DiagnosticProgramTest {
 
     @Test
     public void testInstruction() throws IOException {
-        int[] operations = inputReader.readIntArray("year2019/day5/input1.csv", ",");
+        long[] operations = inputReader.readLongArray("year2019/day5/input1.csv", ",");
         DiagnosticProgram.State state = program.execute(operations, 1);
         assertEquals(15426686, state.getOutput());
 
@@ -32,14 +32,14 @@ public class DiagnosticProgramTest {
 
     @Test
     public void testInputAndOutputOpcodes() {
-        int[] instructions = getInstructions("3,225,4,225,99");
+        long[] instructions = getInstructions("3,225,4,225,99");
         DiagnosticProgram.State state = program.execute(instructions, 42);
         assertEquals(42, state.getOutput());
     }
 
     @Test
     public void testParameterModes() {
-        int[] instructions = getInstructions("1002,4,3,4,33,99");
+        long[] instructions = getInstructions("1002,4,3,4,33,99");
         DiagnosticProgram.State state = program.execute(instructions, 1);
         assertEquals(99, state.getInstruction(4));
     }
@@ -87,12 +87,12 @@ public class DiagnosticProgramTest {
     }
 
     private void testExecute(String values, int input, int expectedOutput) {
-        int[] instructions = getInstructions(values);
+        long[] instructions = getInstructions(values);
         assertEquals("Failed: " + values, expectedOutput, program.execute(instructions, input).getOutput());
     }
 
-    private int[] getInstructions(String input) {
-        int[] instructions = new int[1024];
+    private long[] getInstructions(String input) {
+        long[] instructions = new long[1024];
         Arrays.fill(instructions, 0);
 
         int index = 0;

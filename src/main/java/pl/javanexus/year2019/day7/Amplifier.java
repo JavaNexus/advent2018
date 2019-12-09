@@ -15,7 +15,7 @@ public class Amplifier {
         this.program = new DiagnosticProgram();
     }
 
-    public int execute(int[] instructions, int[] phaseSettings, int initialInput) {
+    public long execute(long[] instructions, long[] phaseSettings, int initialInput) {
         DiagnosticProgram.State[] states = getInitialStates(instructions, phaseSettings);
         states[0].addInput(initialInput);
 
@@ -27,7 +27,7 @@ public class Amplifier {
         return states[phaseSettings.length - 1].getOutput();
     }
 
-    public int executeInFeedbackLoop(int[] instructions, int[] phaseSettings, int initialInput) {
+    public long executeInFeedbackLoop(long[] instructions, long[] phaseSettings, long initialInput) {
         DiagnosticProgram.State[] states = getInitialStates(instructions, phaseSettings);
         states[0].addInput(initialInput);
 
@@ -46,7 +46,7 @@ public class Amplifier {
         return states[phaseSettings.length - 1].getOutput();
     }
 
-    private DiagnosticProgram.State[] getInitialStates(int[] instructions, int[] phaseSettings) {
+    private DiagnosticProgram.State[] getInitialStates(long[] instructions, long[] phaseSettings) {
         DiagnosticProgram.State[] states = new DiagnosticProgram.State[phaseSettings.length];
         for (int i = 0; i < states.length; i++) {
             states[i] = new DiagnosticProgram.State(phaseSettings[i], instructions);
@@ -55,11 +55,11 @@ public class Amplifier {
         return states;
     }
 
-    public int findHighestSignal(int[] instructions, int[] initialPhaseSettings, int input) {
-        int maxOutputSignal = -1;
-        for (List<Integer> permutation : getPermutation(initialPhaseSettings)) {
-            int[] phaseSettings = permutation.stream().mapToInt(Integer::intValue).toArray();
-            int signalOutput = executeInFeedbackLoop(instructions, phaseSettings, input);
+    public long findHighestSignal(long[] instructions, long[] initialPhaseSettings, long input) {
+        long maxOutputSignal = -1;
+        for (List<Long> permutation : getPermutation(initialPhaseSettings)) {
+            long[] phaseSettings = permutation.stream().mapToLong(Long::longValue).toArray();
+            long signalOutput = executeInFeedbackLoop(instructions, phaseSettings, input);
             if (signalOutput > maxOutputSignal) {
                 maxOutputSignal = signalOutput;
             }
@@ -68,9 +68,9 @@ public class Amplifier {
         return maxOutputSignal;
     }
 
-    public Collection<List<Integer>> getPermutation(int[] input) {
+    public Collection<List<Long>> getPermutation(long[] input) {
         return Collections2.orderedPermutations(Arrays.stream(input)
-                .mapToObj(Integer::valueOf)
+                .mapToObj(Long::valueOf)
                 .collect(Collectors.toList()));
     }
 }
