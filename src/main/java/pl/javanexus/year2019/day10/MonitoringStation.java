@@ -72,7 +72,7 @@ public class MonitoringStation {
         int dX = to.getX() - from.getX();
         int dY = to.getY() - from.getY();
 
-        int gcd = MathUtil.findGreatestCommonDivisor(dX, dY);
+        int gcd = Math.abs(MathUtil.findGreatestCommonDivisor(dX, dY));
 
         dX /= gcd;
         dY /= gcd;
@@ -80,11 +80,9 @@ public class MonitoringStation {
 //        System.out.println(from + " -> " + to + " = " + dX + " / " + dY + " -> " + gcd);
 
         boolean hasLineOfSight = true;
-        for (int x = from.getX() + dX, y = from.getY() + dY; x <= to.getX() && y <= to.getY(); x += dX, y += dY) {
+        for (int x = from.getX() + dX, y = from.getY() + dY; x != to.getX() || y != to.getY(); x += dX, y += dY) {
 //            System.out.println("[" + x + ", " + y + "] -> " + (field[y][x]));
-            if (x != to.getX() || y != to.getY()) {
-                hasLineOfSight &= (field[y][x] == null);
-            }
+            hasLineOfSight &= (field[y][x] == null);
         }
 
         System.out.println("line of sight from: " + from + " to: " + to + " -> " + hasLineOfSight);
