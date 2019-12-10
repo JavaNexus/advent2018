@@ -19,13 +19,24 @@ public class MonitoringStationTest {
 
     @Test
     public void testSelectLocation() throws IOException {
-        final MonitoringStation station = getMonitoringStation("year2019/day10/input_tiny.csv");
-        assertEquals(10, station.getAsteroids().size());
+        testSelectLocation("year2019/day10/input_tiny.csv", 3, 4, 8);
+        testSelectLocation("year2019/day10/input_small_001.csv", 5, 8, 33);
+        testSelectLocation("year2019/day10/input_small_002.csv", 1, 2, 35);
+        testSelectLocation("year2019/day10/input_small_003.csv", 6, 3, 41);
+        testSelectLocation("year2019/day10/input_big_001.csv", 11, 13, 210);
+        testSelectLocation("year2019/day10/input1.csv", 8, 16, 214);
+    }
+
+    private void testSelectLocation(String filePath, int expectedX, int expectedY,
+                                    int expectedNumberOfAsteroidsInLineOfSight) throws IOException {
+        final MonitoringStation station = getMonitoringStation(filePath);
+//        assertEquals(10, station.getAsteroids().size());
 
         station.countAsteroidsInLineOfSight();
         MonitoringStation.Asteroid asteroid = station.findAsteroidWithMostLinesOfSightToOtherAsteroids();
-        assertEquals(3, asteroid.getX());
-        assertEquals(4, asteroid.getY());
+        assertEquals(expectedX, asteroid.getX());
+        assertEquals(expectedY, asteroid.getY());
+        assertEquals(expectedNumberOfAsteroidsInLineOfSight, asteroid.getNumberOfAsteroidsInDirectLineOfSight());
     }
 
     /**

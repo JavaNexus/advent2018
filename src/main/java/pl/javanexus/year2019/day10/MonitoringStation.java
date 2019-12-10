@@ -85,7 +85,7 @@ public class MonitoringStation {
             hasLineOfSight &= (field[y][x] == null);
         }
 
-        System.out.println("line of sight from: " + from + " to: " + to + " -> " + hasLineOfSight);
+//        System.out.println("line of sight from: " + from + " to: " + to + " -> " + hasLineOfSight);
 
         return hasLineOfSight;
     }
