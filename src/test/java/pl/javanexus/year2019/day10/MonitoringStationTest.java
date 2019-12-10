@@ -5,6 +5,8 @@ import org.junit.Test;
 import pl.javanexus.InputReader;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -37,6 +39,27 @@ public class MonitoringStationTest {
         assertEquals(expectedX, asteroid.getX());
         assertEquals(expectedY, asteroid.getY());
         assertEquals(expectedNumberOfAsteroidsInLineOfSight, asteroid.getNumberOfAsteroidsInDirectLineOfSight());
+    }
+
+    @Test
+    public void testLaser() throws IOException {
+        final MonitoringStation station = getMonitoringStation("year2019/day10/input_small_004.csv");
+        MonitoringStation.Asteroid laserMoon = station.getAsteroid(8, 3);
+
+        List<MonitoringStation.Asteroid> targetingOrder = station.getTargetingOrder(laserMoon);
+        targetingOrder
+                .forEach(a -> System.out.println(a + " / " + laserMoon.getTan(a) + " / " + laserMoon.getManhattanDistance(a)));
+
+        targetingOrder = targetingOrder.stream()
+                .filter(asteroid -> asteroid.getX() >= laserMoon.getX())
+                .collect(Collectors.toList());
+
+        station.fireLaser(targetingOrder, laserMoon);
+    }
+
+    private void print(MonitoringStation station, MonitoringStation.Asteroid asteroid, int x, int y) {
+        double tan = asteroid.getTan(station.getAsteroid(x, y));
+        System.out.println("[" + x + ", " + y + "] -> " + tan);
     }
 
     /**

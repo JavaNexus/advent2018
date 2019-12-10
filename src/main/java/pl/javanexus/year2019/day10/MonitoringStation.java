@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MonitoringStation {
 
@@ -94,6 +95,32 @@ public class MonitoringStation {
         return field[y][x];
     }
 
+    public List<Asteroid> getTargetingOrder(Asteroid laserMoon) {
+        return getAsteroids().stream()
+                .filter(asteroid -> asteroid.getY() < laserMoon.getY())
+                .sorted((o1, o2) -> {
+                    int tanDiff = (int) Math.signum(o2.getTan(laserMoon) - o1.getTan(laserMoon));
+                    return tanDiff != 0 ? tanDiff : laserMoon.getManhattanDistance(o1) - laserMoon.getManhattanDistance(o2);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public void fireLaser(List<Asteroid> targetingOrder, Asteroid laserMoon) {
+        int targetId = 0;
+        double previousTan = 0;
+        while (!targetingOrder.isEmpty()) {
+            Asteroid target = targetingOrder.get(targetId);
+            double tan = target.getTan(laserMoon);
+            if (tan != previousTan || targetId == 0) {
+                System.out.println(targetId + " / Destroyed asteroid: " + target);
+                targetingOrder.remove(targetId);
+                previousTan = tan;
+            } else {
+                targetId++;
+            }
+        }
+    }
+
     private void printField() {
         for (int y = 0; y < field.length; y++) {
             for (int x = 0; x < field[y].length; x++) {
@@ -112,6 +139,14 @@ public class MonitoringStation {
 
         public void addAsteroidInLineOfSight() {
             this.numberOfAsteroidsInDirectLineOfSight++;
+        }
+
+        public double getTan(Asteroid asteroid) {
+            return (double)(x - asteroid.getX()) / (double)(y - asteroid.getY());
+        }
+
+        public int getManhattanDistance(Asteroid asteroid) {
+            return Math.abs(x - asteroid.getX()) + Math.abs(y - asteroid.getY());
         }
 
         @Override
