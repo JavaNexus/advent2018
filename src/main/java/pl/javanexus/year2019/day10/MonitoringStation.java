@@ -3,8 +3,11 @@ package pl.javanexus.year2019.day10;
 import lombok.Data;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MonitoringStation {
@@ -20,6 +23,7 @@ public class MonitoringStation {
     @Getter
     private final List<Asteroid> asteroids;
     private final Asteroid[][] field;
+    private final List<Quadrant> quadrants = new ArrayList<>(4);
 
     public MonitoringStation(List<String> input) {
         this.field = new Asteroid[input.size()][];
@@ -95,9 +99,18 @@ public class MonitoringStation {
         return field[y][x];
     }
 
-    public List<Asteroid> getTargetingOrder(Asteroid laserMoon) {
+    public void populateQuadrants(Asteroid laserMoon) {
+        this.quadrants.add(new Quadrant(laserMoon, getTargetingOrder(laserMoon, asteroid -> asteroid.getX() >= laserMoon.getX() && asteroid.getY() < laserMoon.getY())));
+        this.quadrants.add(new Quadrant(laserMoon, getTargetingOrder(laserMoon, asteroid -> asteroid.getX() > laserMoon.getX() && asteroid.getY() == laserMoon.getY())));
+        this.quadrants.add(new Quadrant(laserMoon, getTargetingOrder(laserMoon, asteroid -> asteroid.getX() >= laserMoon.getX() && asteroid.getY() > laserMoon.getY())));
+        this.quadrants.add(new Quadrant(laserMoon, getTargetingOrder(laserMoon, asteroid -> asteroid.getX() < laserMoon.getX() && asteroid.getY() > laserMoon.getY())));
+        this.quadrants.add(new Quadrant(laserMoon, getTargetingOrder(laserMoon, asteroid -> asteroid.getX() < laserMoon.getX() && asteroid.getY() == laserMoon.getY())));
+        this.quadrants.add(new Quadrant(laserMoon, getTargetingOrder(laserMoon, asteroid -> asteroid.getX() < laserMoon.getX() && asteroid.getY() < laserMoon.getY())));
+    }
+
+    public List<Asteroid> getTargetingOrder(Asteroid laserMoon, Predicate<Asteroid> isInQuadrant) {
         return getAsteroids().stream()
-                .filter(asteroid -> asteroid.getY() < laserMoon.getY())
+                .filter(isInQuadrant)
                 .sorted((o1, o2) -> {
                     int tanDiff = (int) Math.signum(o2.getTan(laserMoon) - o1.getTan(laserMoon));
                     return tanDiff != 0 ? tanDiff : laserMoon.getManhattanDistance(o1) - laserMoon.getManhattanDistance(o2);
@@ -105,20 +118,19 @@ public class MonitoringStation {
                 .collect(Collectors.toList());
     }
 
-    public void fireLaser(List<Asteroid> targetingOrder, Asteroid laserMoon) {
-        int targetId = 0;
-        double previousTan = 0;
-        while (!targetingOrder.isEmpty()) {
-            Asteroid target = targetingOrder.get(targetId);
-            double tan = target.getTan(laserMoon);
-            if (tan != previousTan || targetId == 0) {
-                System.out.println(targetId + " / Destroyed asteroid: " + target);
-                targetingOrder.remove(targetId);
-                previousTan = tan;
-            } else {
-                targetId++;
+    public void fireLaser(Asteroid laserMoon) {
+        int quadrantId = 0;
+        while (hasRemainingTargets()) {
+            Quadrant quadrant = quadrants.get(quadrantId);
+            if (quadrant.hasRemainingTargets()) {
+                quadrant.fireLaser(laserMoon);
             }
+            quadrantId = (quadrantId + 1) % quadrants.size();
         }
+    }
+
+    private boolean hasRemainingTargets() {
+        return quadrants.stream().filter(Quadrant::hasRemainingTargets).count() > 0;
     }
 
     private void printField() {
@@ -127,6 +139,44 @@ public class MonitoringStation {
                 System.out.print(field[y][x]);
             }
             System.out.print("\n");
+        }
+    }
+
+    public static class Quadrant {
+
+        public static final int NEGATIVE_INFINITY = -1111111111;
+        private final Asteroid laserMoon;
+        private final Queue<Asteroid> remainingTargets = new LinkedList<>();
+
+        public Quadrant(Asteroid laserMoon, List<Asteroid> asteroids) {
+            this.laserMoon = laserMoon;
+            this.remainingTargets.addAll(asteroids);
+        }
+
+        public Queue<Asteroid> getTargets() {
+            return remainingTargets;
+        }
+
+        public boolean hasRemainingTargets() {
+            return !remainingTargets.isEmpty();
+        }
+
+        public void fireLaser(Asteroid laserMoon) {
+            Queue<Asteroid> obscuredTargets = new LinkedList<>();
+
+            double previousTan = NEGATIVE_INFINITY;
+            while (!remainingTargets.isEmpty()) {
+                Asteroid target = remainingTargets.poll();
+                double tan = target.getTan(laserMoon);
+                if (tan != previousTan) {
+                    System.out.println(" >: Destroyed asteroid: " + target);
+                    previousTan = tan;
+                } else {
+                    obscuredTargets.offer(target);
+                }
+            }
+
+            remainingTargets.addAll(obscuredTargets);
         }
     }
 

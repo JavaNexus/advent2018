@@ -44,17 +44,10 @@ public class MonitoringStationTest {
     @Test
     public void testLaser() throws IOException {
         final MonitoringStation station = getMonitoringStation("year2019/day10/input_small_004.csv");
-        MonitoringStation.Asteroid laserMoon = station.getAsteroid(8, 3);
+        final MonitoringStation.Asteroid laserMoon = station.getAsteroid(8, 3);
 
-        List<MonitoringStation.Asteroid> targetingOrder = station.getTargetingOrder(laserMoon);
-        targetingOrder
-                .forEach(a -> System.out.println(a + " / " + laserMoon.getTan(a) + " / " + laserMoon.getManhattanDistance(a)));
-
-        targetingOrder = targetingOrder.stream()
-                .filter(asteroid -> asteroid.getX() >= laserMoon.getX())
-                .collect(Collectors.toList());
-
-        station.fireLaser(targetingOrder, laserMoon);
+        station.populateQuadrants(laserMoon);
+        station.fireLaser(laserMoon);
     }
 
     private void print(MonitoringStation station, MonitoringStation.Asteroid asteroid, int x, int y) {
