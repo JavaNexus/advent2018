@@ -7,6 +7,7 @@ import pl.javanexus.InputReader;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class DiagnosticProgramTest {
@@ -24,7 +25,8 @@ public class DiagnosticProgramTest {
     public void testInstruction() throws IOException {
         long[] operations = inputReader.readLongArray("year2019/day5/input1.csv", ",");
         DiagnosticProgram.State state = program.execute(operations, 1);
-        assertEquals(15426686, state.getOutput());
+
+        assertArrayEquals(new long[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 15426686}, state.getRemainingOutput());
 
         state = program.execute(operations, 5);
         assertEquals(11430197, state.getOutput());

@@ -22,12 +22,14 @@ public class PaintingRobotTest {
         long[] instructions = inputReader.readLongArray("year2019/day11/input1.csv", ",");
         PaintingRobot paintingRobot = new PaintingRobot(200, 200, instructions);
         paintingRobot.paintFromCenter();
+
+        assertEquals(2252, paintingRobot.countPanelsPaintedAtLeastOnce());
     }
 
     @Test
     public void testPaintingRobot() {
         PaintingRobot paintingRobot = new PaintingRobot(5, 5, new long[]{3, 100});
-        int[] numberOfPaintedPanels = paintingRobot.countPaintedPanels();
+        int[] numberOfPaintedPanels = paintingRobot.countPaintedPanelsByColor();
         assertEquals(25, numberOfPaintedPanels[PaintingRobot.COLOR_BLACK]);
         assertEquals(0, numberOfPaintedPanels[PaintingRobot.COLOR_WHITE]);
 

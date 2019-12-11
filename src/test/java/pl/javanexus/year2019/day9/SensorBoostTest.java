@@ -7,6 +7,7 @@ import pl.javanexus.year2019.day5.DiagnosticProgram;
 
 import java.io.IOException;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class SensorBoostTest {
@@ -29,9 +30,10 @@ public class SensorBoostTest {
 
     @Test
     public void testSensorBoost() {
-        DiagnosticProgram.State state = getState(new long[]{109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99});
+        long[] instructions = {109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99};
+        DiagnosticProgram.State state = getState(instructions);
         program.execute(state);
-        assertEquals(99, state.getOutput());
+        assertArrayEquals(instructions, state.getRemainingOutput());
 
         state = getState(new long[]{1102, 34915192, 34915192, 7, 4, 7, 99, 0});
         program.execute(state);

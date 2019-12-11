@@ -1,6 +1,7 @@
 package pl.javanexus.year2019.day11;
 
 import lombok.Data;
+import lombok.Getter;
 import pl.javanexus.year2019.day5.DiagnosticProgram;
 
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class PaintingRobot {
     public static final int TURN_RIGHT = 1;
 
     private final DiagnosticProgram program;
-    private final int[][] hull;
+    private final Panel[][] hull;
     private long[] instructions;
 
     public PaintingRobot(int width, int height, long[] instructions) {
@@ -83,16 +84,16 @@ public class PaintingRobot {
     public void paint(int x, int y) {
         Direction currentDirection = Direction.UP;
 
-        final DiagnosticProgram.State state = new DiagnosticProgram.State(hull[y][x], instructions);
+        final DiagnosticProgram.State state = new DiagnosticProgram.State(hull[y][x].getColor(), instructions);
         while (!state.isFinished()) {
             program.execute(state);
-            // TODO: 11.12.2019 Read color from output
+            hull[y][x].paint((int) state.getOutput());
             long turn = state.getOutput();
             Step nextStep = getNextStep(currentDirection, turn, x, y);
             currentDirection = nextStep.getDirection();
             x = nextStep.getX();
             y = nextStep.getY();
-            state.addInput(hull[y][x]);
+            state.addInput(hull[y][x].getColor());
         }
     }
 
@@ -106,27 +107,70 @@ public class PaintingRobot {
         }
     }
 
-    public int[] countPaintedPanels() {
-        int[] numberOfPaintedPanels = {0, 0};
+    public int countPanelsPaintedAtLeastOnce() {
+        int numberOfPaintedPanels = 0;
 
         for (int y = 0; y < hull.length; y++) {
             for (int x = 0; x < hull[y].length; x++) {
-                int color = hull[y][x];
-                numberOfPaintedPanels[color]++;
+                if (hull[y][x].getNumberOfPaintLayers() > 0) {
+                    numberOfPaintedPanels++;
+                }
             }
         }
 
         return numberOfPaintedPanels;
     }
 
-    private int[][] createHull(int width, int height) {
-        final int[][] hull = new int[height][];
+    public int[] countPaintedPanelsByColor() {
+        int[] numberOfPaintedPanels = {0, 0};
+
         for (int y = 0; y < hull.length; y++) {
-            hull[y] = new int[width];
-            Arrays.fill(hull[y], COLOR_BLACK);
+            for (int x = 0; x < hull[y].length; x++) {
+                Panel panel = hull[y][x];
+                numberOfPaintedPanels[panel.getColor()]++;
+            }
+        }
+
+        return numberOfPaintedPanels;
+    }
+
+    private Panel[][] createHull(int width, int height) {
+        final Panel[][] hull = new Panel[height][];
+        for (int y = 0; y < hull.length; y++) {
+            hull[y] = new Panel[width];
+            for (int x = 0; x < hull[y].length; x++) {
+                hull[y][x] = new Panel(COLOR_BLACK);
+            }
         }
 
         return hull;
+    }
+
+    public void printHull() {
+        for (int y = 0; y < hull.length; y++) {
+            for (int x = 0; x < hull[y].length; x++) {
+                System.out.print(hull[y][x]);
+            }
+            System.out.print("\n");
+        }
+    }
+
+    private static class Panel {
+
+        @Getter
+        private int color;
+        @Getter
+        private int numberOfPaintLayers;
+
+        public Panel(int color) {
+            this.color = color;
+            this.numberOfPaintLayers = 0;
+        }
+
+        public void paint(int color) {
+            this.color = color;
+            this.numberOfPaintLayers++;
+        }
     }
 
     @Data

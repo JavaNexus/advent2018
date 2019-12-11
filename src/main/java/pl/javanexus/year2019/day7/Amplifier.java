@@ -24,7 +24,7 @@ public class Amplifier {
             states[(i + 1) % phaseSettings.length].addInput(state.getOutput());
         }
 
-        return states[phaseSettings.length - 1].getOutput();
+        return states[0].getInput();
     }
 
     public long executeInFeedbackLoop(long[] instructions, long[] phaseSettings, long initialInput) {
@@ -43,7 +43,7 @@ public class Amplifier {
             }
         }
 
-        return states[phaseSettings.length - 1].getOutput();
+        return states[0].getInput();
     }
 
     private DiagnosticProgram.State[] getInitialStates(long[] instructions, long[] phaseSettings) {

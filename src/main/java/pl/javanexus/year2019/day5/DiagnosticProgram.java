@@ -299,17 +299,17 @@ public class DiagnosticProgram {
 
         private final long[] instructions;
         private final Queue<Long> inputQueue;
-        private long output;
+        private final Queue<Long> outputQueue;
         @Getter
         private long relativeBase = 0;
 
         private boolean isFinished = false;
-        private boolean hasOutput = false;
 
         private int instructionIndex = 0;
 
         public State(long[] originalInstructions) {
             this.inputQueue = new LinkedList<>();
+            this.outputQueue = new LinkedList<>();
             this.instructions = new long[BUFFER_SIZE];
             Arrays.fill(instructions, 0);
             System.arraycopy(originalInstructions, 0, instructions, 0, originalInstructions.length);
@@ -340,9 +340,21 @@ public class DiagnosticProgram {
             this.inputQueue.offer(input);
         }
 
+        public long getOutput() {
+            return outputQueue.poll();
+        }
+
         public void setOutput(long output) {
-            this.output = output;
-            this.hasOutput = true;
+            outputQueue.offer(output);
+        }
+
+        public long[] getRemainingOutput() {
+            List<Long> output = new LinkedList<>();
+            while (!outputQueue.isEmpty()) {
+                output.add(outputQueue.poll());
+            }
+
+            return output.stream().mapToLong(Long::longValue).toArray();
         }
 
         public void adjustRelativeBase(long value) {
