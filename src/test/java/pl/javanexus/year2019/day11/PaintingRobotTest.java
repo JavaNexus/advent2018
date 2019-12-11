@@ -20,10 +20,21 @@ public class PaintingRobotTest {
     @Test
     public void testPaintingRobotFromInput() throws IOException {
         long[] instructions = inputReader.readLongArray("year2019/day11/input1.csv", ",");
-        PaintingRobot paintingRobot = new PaintingRobot(200, 200, instructions);
+        PaintingRobot paintingRobot = new PaintingRobot(100, 100, instructions);
         paintingRobot.paintFromCenter();
 
         assertEquals(2252, paintingRobot.countPanelsPaintedAtLeastOnce());
+    }
+
+    @Test
+    public void testPaintingRegistrationNumber() throws IOException {
+        long[] instructions = inputReader.readLongArray("year2019/day11/input1.csv", ",");
+        PaintingRobot paintingRobot = new PaintingRobot(100, 100, instructions);
+
+        PaintingRobot.Step start = paintingRobot.getStartingStep();
+        paintingRobot.paintPanel(start.getX(), start.getY(), PaintingRobot.COLOR_WHITE);
+        paintingRobot.paint(start);
+        paintingRobot.printHull();//AGALRGJE
     }
 
     @Test
@@ -32,7 +43,5 @@ public class PaintingRobotTest {
         int[] numberOfPaintedPanels = paintingRobot.countPaintedPanelsByColor();
         assertEquals(25, numberOfPaintedPanels[PaintingRobot.COLOR_BLACK]);
         assertEquals(0, numberOfPaintedPanels[PaintingRobot.COLOR_WHITE]);
-
-        paintingRobot.paint(2, 2);
     }
 }

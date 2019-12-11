@@ -76,13 +76,23 @@ public class PaintingRobot {
     }
 
     public void paintFromCenter() {
-        int centerY = hull.length / 2;
-        int centerX = hull[centerY].length / 2;
-        paint(centerX, centerY);
+        paint(getStartingStep());
     }
 
-    public void paint(int x, int y) {
-        Direction currentDirection = Direction.UP;
+    public Step getStartingStep() {
+        int centerY = hull.length / 2;
+        int centerX = hull[centerY].length / 2;
+        return new Step(centerX, centerY, Direction.UP);
+    }
+
+    public void paintPanel(int x, int y, int color) {
+        hull[y][x].paint(color);
+    }
+
+    public void paint(Step start) {
+        int x = start.getX();
+        int y = start.getY();
+        Direction currentDirection = start.getDirection();
 
         final DiagnosticProgram.State state = new DiagnosticProgram.State(hull[y][x].getColor(), instructions);
         while (!state.isFinished()) {
@@ -155,7 +165,7 @@ public class PaintingRobot {
         }
     }
 
-    private static class Panel {
+    public static class Panel {
 
         @Getter
         private int color;
@@ -171,10 +181,15 @@ public class PaintingRobot {
             this.color = color;
             this.numberOfPaintLayers++;
         }
+
+        @Override
+        public String toString() {
+            return color == COLOR_BLACK ? " " : "#";
+        }
     }
 
     @Data
-    private static class Step {
+    public static class Step {
         private final int x;
         private final int y;
         private final Direction direction;
