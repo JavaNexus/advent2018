@@ -6,7 +6,6 @@ import pl.javanexus.InputReader;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -32,7 +31,6 @@ public class MonitoringStationTest {
     private void testSelectLocation(String filePath, int expectedX, int expectedY,
                                     int expectedNumberOfAsteroidsInLineOfSight) throws IOException {
         final MonitoringStation station = getMonitoringStation(filePath);
-//        assertEquals(10, station.getAsteroids().size());
 
         station.countAsteroidsInLineOfSight();
         MonitoringStation.Asteroid asteroid = station.findAsteroidWithMostLinesOfSightToOtherAsteroids();
@@ -43,11 +41,27 @@ public class MonitoringStationTest {
 
     @Test
     public void testLaser() throws IOException {
-        final MonitoringStation station = getMonitoringStation("year2019/day10/input_small_004.csv");
-        final MonitoringStation.Asteroid laserMoon = station.getAsteroid(8, 3);
+        List<MonitoringStation.Asteroid> destroyedTargets =
+                testLaser("year2019/day10/input_big_001.csv", 11, 13);
+        verifyDestructionOrder(destroyedTargets, 200, 8, 2);
+        verifyDestructionOrder(destroyedTargets, 299, 11, 1);
+
+        destroyedTargets = testLaser("year2019/day10/input1.csv", 8, 16);
+        verifyDestructionOrder(destroyedTargets, 200, 5, 2);
+    }
+
+    private void verifyDestructionOrder(List<MonitoringStation.Asteroid> destroyedTargets, int targetIndex, int expectedX, int expectedY) {
+        MonitoringStation.Asteroid asteroid = destroyedTargets.get(targetIndex - 1);
+        assertEquals(expectedX, asteroid.getX());
+        assertEquals(expectedY, asteroid.getY());
+    }
+
+    private List<MonitoringStation.Asteroid> testLaser(String filePath, int x, int y) throws IOException {
+        final MonitoringStation station = getMonitoringStation(filePath);
+        final MonitoringStation.Asteroid laserMoon = station.getAsteroid(x, y);
 
         station.populateQuadrants(laserMoon);
-        station.fireLaser(laserMoon);
+        return station.fireLaser(laserMoon);
     }
 
     private void print(MonitoringStation station, MonitoringStation.Asteroid asteroid, int x, int y) {

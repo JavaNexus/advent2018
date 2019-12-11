@@ -118,15 +118,19 @@ public class MonitoringStation {
                 .collect(Collectors.toList());
     }
 
-    public void fireLaser(Asteroid laserMoon) {
+    public List<Asteroid> fireLaser(Asteroid laserMoon) {
+        final List<Asteroid> destroyedTargets = new LinkedList<>();
+
         int quadrantId = 0;
         while (hasRemainingTargets()) {
             Quadrant quadrant = quadrants.get(quadrantId);
             if (quadrant.hasRemainingTargets()) {
-                quadrant.fireLaser(laserMoon);
+                destroyedTargets.addAll(quadrant.fireLaser(laserMoon));
             }
             quadrantId = (quadrantId + 1) % quadrants.size();
         }
+
+        return destroyedTargets;
     }
 
     private boolean hasRemainingTargets() {
@@ -161,7 +165,8 @@ public class MonitoringStation {
             return !remainingTargets.isEmpty();
         }
 
-        public void fireLaser(Asteroid laserMoon) {
+        public List<Asteroid> fireLaser(Asteroid laserMoon) {
+            List<Asteroid> destroyedTargets = new LinkedList<>();
             Queue<Asteroid> obscuredTargets = new LinkedList<>();
 
             double previousTan = NEGATIVE_INFINITY;
@@ -169,14 +174,16 @@ public class MonitoringStation {
                 Asteroid target = remainingTargets.poll();
                 double tan = target.getTan(laserMoon);
                 if (tan != previousTan) {
-                    System.out.println(" >: Destroyed asteroid: " + target);
+//                    System.out.println(" >: Destroyed asteroid: " + target);
+                    destroyedTargets.add(target);
                     previousTan = tan;
                 } else {
                     obscuredTargets.offer(target);
                 }
             }
-
             remainingTargets.addAll(obscuredTargets);
+
+            return destroyedTargets;
         }
     }
 
