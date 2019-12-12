@@ -109,7 +109,9 @@ public class MoonsOfJupiter {
         do {
             updateHistory(t);
             updateState();
+            checkForPeriod(t);
             t++;
+
 //            System.out.println(t + "," + getTotalKineticEnergy() + "," + getTotalPotentialEnergy() + "," + getTotalEnergy());
 //            System.out.println(Arrays.toString(moons.get(0).getPosition()));
         } while (getTotalEnergy() != totalEnergy || !isExpectedState(originalPosition, originalVelocity));
@@ -120,6 +122,12 @@ public class MoonsOfJupiter {
     private void updateHistory(int t) {
         for (Moon moon : moons) {
             moon.updateHistory(t);
+        }
+    }
+
+    public void checkForPeriod(int t) {
+        for (Moon moon : moons) {
+            moon.checkForPeriod(t);
         }
     }
 
@@ -153,6 +161,8 @@ public class MoonsOfJupiter {
 
         private final long[] position = {0, 0, 0};
         private final long[] velocity = {0, 0, 0};
+        private final int[] period = {0, 0, 0};
+        private final int[] periodSequenceLength = {0, 0, 0};
 
         private final long[][] history = new long[HISTORY_LENGTH][];
 
@@ -218,6 +228,29 @@ public class MoonsOfJupiter {
             if (t < history.length) {
                 history[t] = new long[position.length];
                 System.arraycopy(position, 0, history[t], 0, position.length);
+            }
+        }
+
+        public void checkForPeriod(int t) {
+            int coordinate = 0;
+            int periodLength = period[coordinate];
+            if (periodLength > 0) {
+                int nextPeriodElementIndex = t - periodLength;
+                if (position[coordinate] == history[nextPeriodElementIndex][coordinate]) {
+                    if (periodSequenceLength[coordinate] == periodLength) {
+                        System.out.println("Bingo! Period from: " + (history.length - periodLength) + ", length: " + periodLength);
+                    } else {
+                        periodSequenceLength[coordinate]++;
+                    }
+                } else {
+                    period[coordinate] = 0;
+                    System.out.println("Period sequence broken / element at: " + nextPeriodElementIndex
+                            + " did not match element at: " + (t + 1));
+                }
+            } else if (position[coordinate] == history[0][coordinate]) {
+                System.out.println("Possible period found starting from: " + position[coordinate] + ", length: " + t);
+                period[coordinate] = t;
+                periodSequenceLength[coordinate] = 0;
             }
         }
     }
