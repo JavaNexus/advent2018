@@ -2,6 +2,8 @@ package pl.javanexus.year2019.day12;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -26,10 +28,10 @@ public class MoonsOfJupiterTest {
         MoonsOfJupiter moonsOfJupiter = new MoonsOfJupiter();
         moonsOfJupiter.parseInitialPositions(INPUT_1);
 
-        moonsOfJupiter.updatePosition(1);
+        moonsOfJupiter.simulateMovementOverTime(1);
         verifyPosition(new long[][] {{2, -1, 1}, {3, -7, -4}, {1, -7, 5}, {2, 2, 0}}, moonsOfJupiter);
 
-        moonsOfJupiter.updatePosition(9);//After 10 steps
+        moonsOfJupiter.simulateMovementOverTime(9);//After 10 steps
         verifyPosition(new long[][] {{2, 1, -3}, {1, -8, 0}, {3, -6, 1}, {2, 0, 4}}, moonsOfJupiter);
 
         assertEquals(179, moonsOfJupiter.getTotalEnergy());
@@ -40,8 +42,39 @@ public class MoonsOfJupiterTest {
         MoonsOfJupiter moonsOfJupiter = new MoonsOfJupiter();
         moonsOfJupiter.parseInitialPositions(INPUT_2);
 
-        moonsOfJupiter.updatePosition(1000);
+        moonsOfJupiter.simulateMovementOverTime(1000);
         assertEquals(7928, moonsOfJupiter.getTotalEnergy());
+    }
+
+    @Test
+    public void testReset() {
+        MoonsOfJupiter moonsOfJupiter = new MoonsOfJupiter();
+        moonsOfJupiter.parseInitialPositions(INPUT_2);
+
+        System.out.println("Before:");
+        moonsOfJupiter.printMoons();
+
+        long[][] originalPosition = moonsOfJupiter.getPositions();
+        long[][] originalVelocity = moonsOfJupiter.getVelocity();
+
+        long totalKineticEnergy = moonsOfJupiter.getTotalKineticEnergy();
+        long totalPotentialEnergy = moonsOfJupiter.getTotalPotentialEnergy();
+        long totalEnergy = moonsOfJupiter.getTotalEnergy();
+        System.out.println("Total: " + totalEnergy + ", K: " + totalKineticEnergy + ", P: " + totalPotentialEnergy);
+
+//        moonsOfJupiter.simulateMovementOverTime(2772);
+//        moonsOfJupiter.printMoons();
+
+        long numberOfStepsToRestoreInitialState =
+                moonsOfJupiter.getNumberOfStepsToRestoreInitialState(totalEnergy, originalPosition, originalVelocity);
+
+        System.out.println("After:");
+        moonsOfJupiter.printMoons();
+        System.out.println("K: " + moonsOfJupiter.getTotalKineticEnergy());
+        System.out.println("P: " + moonsOfJupiter.getTotalPotentialEnergy());
+
+        assertEquals(2772, numberOfStepsToRestoreInitialState);
+
     }
 
     private void verifyPosition(long[][] expectedPositions, MoonsOfJupiter moonsOfJupiter) {

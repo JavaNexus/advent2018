@@ -3,6 +3,8 @@ package pl.javanexus.year2019.day12;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,14 +44,18 @@ public class MoonsOfJupiter {
         }
     }
 
-    public void updatePosition(int time) {
+    public void simulateMovementOverTime(int time) {
         for (int t = 0; t < time; t++) {
-            for (Moon moon : moons) {
-                moon.updateVelocity(moons);
-            }
-            for (Moon moon : moons) {
-                moon.updatePosition();
-            }
+            updateState();
+        }
+    }
+
+    private void updateState() {
+        for (Moon moon : moons) {
+            moon.updateVelocity(moons);
+        }
+        for (Moon moon : moons) {
+            moon.updatePosition();
         }
     }
 
@@ -67,6 +73,74 @@ public class MoonsOfJupiter {
 
     public long getTotalEnergy() {
         return moons.stream().mapToLong(Moon::getTotalEnergy).sum();
+    }
+
+    public long getTotalKineticEnergy() {
+        return moons.stream().mapToLong(Moon::getKineticEnergy).sum();
+    }
+
+    public long getTotalPotentialEnergy() {
+        return moons.stream().mapToLong(Moon::getPotentialEnergy).sum();
+    }
+
+    public long[][] getPositions() {
+        long[][] positions = new long[moons.size()][];
+        for (int i = 0; i < moons.size(); i++) {
+            long[] moonPosition = moons.get(i).getPosition();
+            positions[i] = new long[moonPosition.length];
+            System.arraycopy(moonPosition, 0, positions[i], 0, positions[i].length);
+        }
+
+        return positions;
+    }
+
+    public long[][] getVelocity() {
+        long[][] velocity = new long[moons.size()][];
+        for (int i = 0; i < moons.size(); i++) {
+            long[] moonVelocity = moons.get(i).getVelocity();
+            velocity[i] = new long[moonVelocity.length];
+            System.arraycopy(moonVelocity, 0, velocity[i], 0, velocity[i].length);
+        }
+
+        return velocity;
+    }
+
+    public long getNumberOfStepsToRestoreInitialState(long totalEnergy, long[][] originalPosition, long[][] originalVelocity) {
+        int t = 0;
+        do {
+            updateState();
+            t++;
+            System.out.println(t + "," + getTotalKineticEnergy() + "," + getTotalPotentialEnergy() + "," + getTotalEnergy());
+        } while (getTotalEnergy() != totalEnergy);
+        // && isExpectedState(originalPosition, originalVelocity)
+
+        return t;
+    }
+
+    public void printMoons() {
+        for (Moon moon : moons) {
+            System.out.println(moon);
+        }
+    }
+
+    private boolean isExpectedState(long[][] originalPosition, long[][] originalVelocity) {
+        boolean isEqual = true;
+        for (int i = 0; i < moons.size(); i++) {
+            Moon moon = moons.get(i);
+            isEqual &= isEqual(moon.getPosition(), originalPosition[i]) && isEqual(moon.getVelocity(), originalVelocity[i]);
+        }
+
+        return isEqual;
+    }
+
+    private boolean isEqual(long[] left, long[] right) {
+        // TODO: 12.12.2019 check array length first
+        boolean isEqual = true;
+        for (int i = 0; i < left.length; i++) {
+            isEqual &= left[i] == right[i];
+        }
+
+        return isEqual;
     }
 
     public static class Moon {
@@ -106,6 +180,10 @@ public class MoonsOfJupiter {
             return position;
         }
 
+        public long[] getVelocity() {
+            return velocity;
+        }
+
         public long getPotentialEnergy() {
             return Arrays.stream(position).map(Math::abs).sum();
         }
@@ -123,6 +201,8 @@ public class MoonsOfJupiter {
             return "Moon{" +
                     "p=" + Arrays.toString(position) +
                     ", v=" + Arrays.toString(velocity) +
+                    ", E_K=" + getKineticEnergy() +
+                    ", E_P=" + getPotentialEnergy() +
                     '}';
         }
     }
