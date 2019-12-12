@@ -49,7 +49,7 @@ public class MoonsOfJupiterTest {
     @Test
     public void testReset() {
         MoonsOfJupiter moonsOfJupiter = new MoonsOfJupiter();
-        moonsOfJupiter.parseInitialPositions(INPUT_2);
+        moonsOfJupiter.parseInitialPositions(INPUT_1);
 
         System.out.println("Before:");
         moonsOfJupiter.printMoons();

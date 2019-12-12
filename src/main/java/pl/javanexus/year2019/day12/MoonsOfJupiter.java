@@ -3,8 +3,6 @@ package pl.javanexus.year2019.day12;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,6 +10,7 @@ public class MoonsOfJupiter {
 
     //<x=-1, y=0, z=2>
     private static final Pattern inputPattern = Pattern.compile("<x=([-0-9]+), y=([-0-9]+), z=([-0-9]+)>");
+    public static final int HISTORY_LENGTH = 2048;
 
     enum Coordinate {
         X(0),
@@ -108,13 +107,20 @@ public class MoonsOfJupiter {
     public long getNumberOfStepsToRestoreInitialState(long totalEnergy, long[][] originalPosition, long[][] originalVelocity) {
         int t = 0;
         do {
+            updateHistory(t);
             updateState();
             t++;
-            System.out.println(t + "," + getTotalKineticEnergy() + "," + getTotalPotentialEnergy() + "," + getTotalEnergy());
-        } while (getTotalEnergy() != totalEnergy);
-        // && isExpectedState(originalPosition, originalVelocity)
+//            System.out.println(t + "," + getTotalKineticEnergy() + "," + getTotalPotentialEnergy() + "," + getTotalEnergy());
+//            System.out.println(Arrays.toString(moons.get(0).getPosition()));
+        } while (getTotalEnergy() != totalEnergy || !isExpectedState(originalPosition, originalVelocity));
 
         return t;
+    }
+
+    private void updateHistory(int t) {
+        for (Moon moon : moons) {
+            moon.updateHistory(t);
+        }
     }
 
     public void printMoons() {
@@ -147,6 +153,8 @@ public class MoonsOfJupiter {
 
         private final long[] position = {0, 0, 0};
         private final long[] velocity = {0, 0, 0};
+
+        private final long[][] history = new long[HISTORY_LENGTH][];
 
         public Moon(long x, long y, long z) {
             position[Coordinate.X.getIndex()] = x;
@@ -204,6 +212,13 @@ public class MoonsOfJupiter {
                     ", E_K=" + getKineticEnergy() +
                     ", E_P=" + getPotentialEnergy() +
                     '}';
+        }
+
+        public void updateHistory(int t) {
+            if (t < history.length) {
+                history[t] = new long[position.length];
+                System.arraycopy(position, 0, history[t], 0, position.length);
+            }
         }
     }
 }
