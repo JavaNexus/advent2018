@@ -120,6 +120,16 @@ public class MoonsOfJupiter {
         return t;
     }
 
+    public void findPeriods() {
+        int t = 0;
+        do {
+            updateHistory(t);
+            updateState();
+            checkForPeriod(t);
+            t++;
+        } while (!hasFoundPeriodsForEachMoon());
+    }
+
     private void updateHistory(int t) {
         for (Moon moon : moons) {
             moon.updateHistory(t);
@@ -130,6 +140,10 @@ public class MoonsOfJupiter {
         for (Moon moon : moons) {
             moon.checkForPeriod(t);
         }
+    }
+
+    private boolean hasFoundPeriodsForEachMoon() {
+        return moons.stream().filter(Moon::hasFoundAllPeriods).count() == moons.size();
     }
 
     public void printMoons() {
@@ -234,6 +248,10 @@ public class MoonsOfJupiter {
                 history[t] = new long[position.length];
                 System.arraycopy(position, 0, history[t], 0, position.length);
             }
+        }
+
+        public boolean hasFoundAllPeriods() {
+            return Arrays.stream(positionPeriod).filter(period -> period > 0).count() == positionPeriod.length;
         }
 
         public void checkForPeriod(int t) {
