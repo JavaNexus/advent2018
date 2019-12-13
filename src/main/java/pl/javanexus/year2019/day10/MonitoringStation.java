@@ -77,7 +77,7 @@ public class MonitoringStation {
         int dX = to.getX() - from.getX();
         int dY = to.getY() - from.getY();
 
-        int gcd = Math.abs(MathUtil.findGreatestCommonDivisor(dX, dY));
+        long gcd = Math.abs(MathUtil.findGreatestCommonDivisor(dX, dY));
 
         dX /= gcd;
         dY /= gcd;

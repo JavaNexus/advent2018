@@ -1,17 +1,16 @@
 package pl.javanexus.year2019.day12;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class MoonsOfJupiter {
 
     //<x=-1, y=0, z=2>
     private static final Pattern inputPattern = Pattern.compile("<x=([-0-9]+), y=([-0-9]+), z=([-0-9]+)>");
 
-    public static final int HISTORY_LENGTH = 10000; //2048;
+    public static final int HISTORY_LENGTH = 2000000;//Integer.MAX_VALUE - 1; //2048;
 
     enum Coordinate {
         X(0),
@@ -130,6 +129,13 @@ public class MoonsOfJupiter {
         } while (!hasFoundPeriodsForEachMoon());
     }
 
+    public Set<Long> getPeriods() {
+        return moons.stream()
+                .flatMapToInt(moon -> Arrays.stream(moon.getPositionPeriod()))
+                .mapToObj(Long::new)
+                .collect(Collectors.toSet());
+    }
+
     private void updateHistory(int t) {
         for (Moon moon : moons) {
             moon.updateHistory(t);
@@ -218,6 +224,10 @@ public class MoonsOfJupiter {
 
         public long[] getVelocity() {
             return velocity;
+        }
+
+        public int[] getPositionPeriod() {
+            return positionPeriod;
         }
 
         public long getPotentialEnergy() {
