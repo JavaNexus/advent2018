@@ -340,6 +340,10 @@ public class DiagnosticProgram {
             this.inputQueue.offer(input);
         }
 
+        public boolean hasOutput() {
+            return !outputQueue.isEmpty();
+        }
+
         public long getOutput() {
             return outputQueue.poll();
         }
