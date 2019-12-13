@@ -10,7 +10,8 @@ public class MoonsOfJupiter {
 
     //<x=-1, y=0, z=2>
     private static final Pattern inputPattern = Pattern.compile("<x=([-0-9]+), y=([-0-9]+), z=([-0-9]+)>");
-    public static final int HISTORY_LENGTH = 2048;
+
+    public static final int HISTORY_LENGTH = 10000; //2048;
 
     enum Coordinate {
         X(0),
@@ -161,8 +162,11 @@ public class MoonsOfJupiter {
 
         private final long[] position = {0, 0, 0};
         private final long[] velocity = {0, 0, 0};
-        private final int[] period = {0, 0, 0};
-        private final int[] periodSequenceLength = {0, 0, 0};
+
+        private final int[] positionPeriod = {0, 0, 0};
+        private final int[] periodStart = {0, 0, 0};
+        private final int[] periodLength = {0, 0, 0};
+        private final int[] sequenceLength = {0, 0, 0};
 
         private final long[][] history = new long[HISTORY_LENGTH][];
 
@@ -218,6 +222,7 @@ public class MoonsOfJupiter {
         public String toString() {
             return "Moon{" +
                     "p=" + Arrays.toString(position) +
+                    ", p_period=" + Arrays.toString(positionPeriod) +
                     ", v=" + Arrays.toString(velocity) +
                     ", E_K=" + getKineticEnergy() +
                     ", E_P=" + getPotentialEnergy() +
@@ -232,25 +237,31 @@ public class MoonsOfJupiter {
         }
 
         public void checkForPeriod(int t) {
-            int coordinate = 0;
-            int periodLength = period[coordinate];
-            if (periodLength > 0) {
-                int nextPeriodElementIndex = t - periodLength;
-                if (position[coordinate] == history[nextPeriodElementIndex][coordinate]) {
-                    if (periodSequenceLength[coordinate] == periodLength) {
-                        System.out.println("Bingo! Period from: " + (history.length - periodLength) + ", length: " + periodLength);
-                    } else {
-                        periodSequenceLength[coordinate]++;
-                    }
-                } else {
-                    period[coordinate] = 0;
-                    System.out.println("Period sequence broken / element at: " + nextPeriodElementIndex
-                            + " did not match element at: " + (t + 1));
+            for (int coordinate = 0; coordinate < 3; coordinate++) {
+                if (positionPeriod[coordinate] > 0) {
+                    continue;
                 }
-            } else if (position[coordinate] == history[0][coordinate]) {
-                System.out.println("Possible period found starting from: " + position[coordinate] + ", length: " + t);
-                period[coordinate] = t;
-                periodSequenceLength[coordinate] = 0;
+
+                if (periodLength[coordinate] > 0) {
+                    if (history[t][coordinate] == history[t - periodLength[coordinate]][coordinate]) {
+//                        System.out.println("Matched next element of period at " + t + " (" + history[t][coordinate] + ")"
+//                                + " [" + sequenceLength[coordinate] + "/" + periodLength[coordinate] + "]");
+                        sequenceLength[coordinate]++;
+                        if (sequenceLength[coordinate] == periodLength[coordinate]) {
+                            positionPeriod[coordinate] = periodLength[coordinate];
+//                            System.out.println("Bingo! Found period for coordinate: " + coordinate + " of length: " + periodLength[coordinate]);
+                        }
+                    } else {
+//                        System.out.println("Element " + history[t][coordinate] + " broke period sequence at " + t);
+                        periodLength[coordinate] = 0;
+                        sequenceLength[coordinate] = 0;
+                    }
+                }
+                if (periodLength[coordinate] == 0 && history[t][coordinate] == history[periodStart[coordinate]][coordinate]) {
+                    periodLength[coordinate] = t - periodStart[coordinate];
+//                    System.out.println("Possible period found from: " + periodStart[coordinate] + " to: " + t
+//                            + " - length: " + periodLength[coordinate]);
+                }
             }
         }
     }
