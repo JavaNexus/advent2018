@@ -3,11 +3,13 @@ package pl.javanexus.year2019.day13;
 import lombok.Getter;
 import pl.javanexus.year2019.day5.DiagnosticProgram;
 
+import java.io.*;
 import java.util.Arrays;
 
 public class CarePackage {
 
-    public static final int MAX_SIZE = 50;
+    public static final int GRID_HEIGHT = 25;
+    public static final int GRID_WIDTH = 40;
 
     private long[] instructions;
     private final int[][] grid;
@@ -34,6 +36,19 @@ public class CarePackage {
 
     private final DiagnosticProgram program;
 
+    public static void main(String[] args) throws IOException {
+        long[] instructions = getInstructions("./src/test/resources/year2019/day13/input1.csv", ",");
+        CarePackage carePackage = new CarePackage(instructions);
+        carePackage.setNumberOfQuarters(2);
+//        carePackage.executeProgram();
+        carePackage.playGame();
+    }
+
+    private static long[] getInstructions(String filePath, String delimiter) throws IOException {
+        String[] values = new BufferedReader(new FileReader(new File(filePath))).readLine().split(delimiter);
+        return Arrays.stream(values).mapToLong(Long::parseLong).toArray();
+    }
+
     public CarePackage(long[] instructions) {
         this.program = new DiagnosticProgram();
         this.instructions = instructions;
@@ -41,10 +56,10 @@ public class CarePackage {
     }
 
     private int[][] createGrid() {
-        final int[][] grid = new int[MAX_SIZE][];
+        final int[][] grid = new int[GRID_HEIGHT][];
 
         for (int y = 0; y < grid.length; y++) {
-            grid[y] = new int[MAX_SIZE];
+            grid[y] = new int[GRID_WIDTH];
             Arrays.fill(grid[y], 0);
         }
 
@@ -52,19 +67,39 @@ public class CarePackage {
     }
 
     public void playGame() {
+        Console console = System.console();
+
+        DiagnosticProgram.State state = new DiagnosticProgram.State(instructions);
+        while (!state.isFinished()) {
+            program.execute(state);
+            updateGrid(state);
+            printGrid(console.writer());
+
+            long input = Long.parseLong(console.readLine().trim());
+            state.addInput(input);
+        }
+    }
+
+    public void executeProgram() {
         DiagnosticProgram.State state = new DiagnosticProgram.State(instructions);
         while (!state.isFinished()) {
             program.execute(state);
         }
+        updateGrid(state);
+        printGrid();
+    }
 
+    private void updateGrid(DiagnosticProgram.State state) {
         final Point point = new Point();
         while (state.hasOutput()) {
             if (point.setValueFromOutput((int) state.getOutput())) {
-                grid[point.getY()][point.getX()] = point.getTileId();
+                if (point.containsScore()) {
+                    System.out.println("Score: " + point.getTileId());
+                } else {
+                    grid[point.getY()][point.getX()] = point.getTileId();
+                }
             }
         }
-
-        printGrid();
     }
 
     public void printGrid() {
@@ -74,6 +109,16 @@ public class CarePackage {
             }
             System.out.print("\n");
         }
+    }
+
+    public void printGrid(PrintWriter writer) {
+        for (int y = 0; y < grid.length; y++) {
+            for (int x = 0; x < grid[y].length; x++) {
+                writer.print(grid[y][x]);
+            }
+            writer.print("\n");
+        }
+        writer.flush();
     }
 
     public int[] countTiles() {
@@ -87,6 +132,10 @@ public class CarePackage {
         }
 
         return numberOfTiles;
+    }
+
+    public void setNumberOfQuarters(int quarters) {
+        instructions[0] = quarters;
     }
 
     private class Point {
@@ -114,6 +163,10 @@ public class CarePackage {
                 default:
                     throw new RuntimeException("Unexpected output size");
             }
+        }
+
+        public boolean containsScore() {
+            return x == -1 && y == 0;
         }
     }
 }

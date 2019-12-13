@@ -21,7 +21,7 @@ public class CarePackageTest {
     public void testInitialState() throws IOException {
         long[] instructions = inputReader.readLongArray("year2019/day13/input1.csv", ",");
         CarePackage carePackage = new CarePackage(instructions);
-        carePackage.playGame();
+        carePackage.executeProgram();
 
         int[] numberOfTiles = carePackage.countTiles();
         assertEquals(348, numberOfTiles[CarePackage.Tile.BLOCK.getId()]);
