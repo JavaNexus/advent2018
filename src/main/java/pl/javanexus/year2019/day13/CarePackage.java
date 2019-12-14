@@ -1,6 +1,9 @@
 package pl.javanexus.year2019.day13;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import pl.javanexus.year2019.day5.DiagnosticProgram;
 
 import java.io.*;
@@ -11,26 +14,41 @@ public class CarePackage {
     public static final int GRID_HEIGHT = 25;
     public static final int GRID_WIDTH = 40;
 
+    private Point ballPosition;
+    private Point paddlePosition;
+
     private long[] instructions;
     private final int[][] grid;
 
-    enum Tile {
-        EMPTY(0, " "),//No game object appears in this tile.
-        WALL(1, "|"),//Walls are indestructible barriers.
-        BLOCK(2, "#"),//Blocks can be broken by the ball.
-        PADDLE(3, "-"),//The paddle is indestructible.
-        BALL(4, "O");//The ball moves diagonally and bounces off objects.
+    enum TileType {
+        EMPTY(0, " ", false),//No game object appears in this tile.
+        WALL(1, "|", true),//Walls are indestructible barriers.
+        BLOCK(2, "#", true),//Blocks can be broken by the ball.
+        PADDLE(3, "-", true),//The paddle is indestructible.
+        BALL(4, "O", true);//The ball moves diagonally and bounces off objects.
 
-        private final int id;
-        private final String symbol;
-
-        Tile(int id, String symbol) {
-            this.id = id;
-            this.symbol = symbol;
+        private static final TileType[] INDEX = new TileType[TileType.values().length];
+        static {
+            for(TileType tileType : TileType.values()) {
+                INDEX[tileType.getId()] = tileType;
+            }
         }
 
-        public int getId() {
-            return id;
+        public static TileType getType(int tileId) {
+            return INDEX[tileId];
+        }
+
+        @Getter
+        private final int id;
+        @Getter
+        private final String symbol;
+        @Getter
+        private final boolean blocking;
+
+        TileType(int id, String symbol, boolean blocking) {
+            this.id = id;
+            this.symbol = symbol;
+            this.blocking = blocking;
         }
     }
 
@@ -39,7 +57,7 @@ public class CarePackage {
     public static void main(String[] args) throws IOException {
         long[] instructions = getInstructions("./src/test/resources/year2019/day13/input1.csv", ",");
         CarePackage carePackage = new CarePackage(instructions);
-        carePackage.setNumberOfQuarters(2);
+        carePackage.insertQuarters(2);
 //        carePackage.executeProgram();
         carePackage.playGame();
     }
@@ -53,6 +71,9 @@ public class CarePackage {
         this.program = new DiagnosticProgram();
         this.instructions = instructions;
         this.grid = createGrid();
+
+        this.ballPosition = new Point(18, 20);
+        this.paddlePosition = new Point(20, 23);
     }
 
     private int[][] createGrid() {
@@ -67,17 +88,33 @@ public class CarePackage {
     }
 
     public void playGame() {
-        Console console = System.console();
-
         DiagnosticProgram.State state = new DiagnosticProgram.State(instructions);
         while (!state.isFinished()) {
             program.execute(state);
             updateGrid(state);
-            printGrid(console.writer());
+            printGrid();
 
-            long input = Long.parseLong(console.readLine().trim());
-            state.addInput(input);
+            state.addInput(getNextInput());
         }
+    }
+
+    private int getNextInput() {
+        if (paddlePosition.getX() > ballPosition.getX()) {
+            return -1;
+        } else if (paddlePosition.getX() < ballPosition.getX()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    private TileType getTileType(Point point) {
+        return getTileType(point.getX(), point.getY());
+    }
+
+    private TileType getTileType(int x, int y) {
+        int nextTileId = grid[y][x];
+        return TileType.getType(nextTileId);
     }
 
     public void executeProgram() {
@@ -90,13 +127,18 @@ public class CarePackage {
     }
 
     private void updateGrid(DiagnosticProgram.State state) {
-        final Point point = new Point();
+        final Tile tile = new Tile();
         while (state.hasOutput()) {
-            if (point.setValueFromOutput((int) state.getOutput())) {
-                if (point.containsScore()) {
-                    System.out.println("Score: " + point.getTileId());
+            if (tile.setValueFromOutput((int) state.getOutput())) {
+                if (tile.getPoint().containsScore()) {
+                    System.out.println("Score: " + tile.getTileId());
                 } else {
-                    grid[point.getY()][point.getX()] = point.getTileId();
+                    if (tile.getTileId() == TileType.BALL.getId()) {
+                        this.ballPosition.update(tile.getPoint());
+                    } else if (tile.getTileId() == TileType.PADDLE.getId()) {
+                        this.paddlePosition.update(tile.getPoint());
+                    }
+                    grid[tile.getPoint().getY()][tile.getPoint().getX()] = tile.getTileId();
                 }
             }
         }
@@ -122,7 +164,7 @@ public class CarePackage {
     }
 
     public int[] countTiles() {
-        final int[] numberOfTiles = new int[Tile.values().length];
+        final int[] numberOfTiles = new int[TileType.values().length];
         Arrays.fill(numberOfTiles, 0);
 
         for (int y = 0; y < grid.length; y++) {
@@ -134,15 +176,39 @@ public class CarePackage {
         return numberOfTiles;
     }
 
-    public void setNumberOfQuarters(int quarters) {
+    public void insertQuarters(int quarters) {
         instructions[0] = quarters;
     }
 
-    private class Point {
-        @Getter
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class Point {
         private int x;
-        @Getter
         private int y;
+
+        public Point(Point point) {
+            this.update(point);
+        }
+
+        public void update(int dX, int dY) {
+            this.x += dX;
+            this.y += dY;
+        }
+
+        public boolean containsScore() {
+            return x == -1 && y == 0;
+        }
+
+        public void update(Point point) {
+            this.x = point.getX();
+            this.y = point.getY();
+        }
+    }
+
+    private static class Tile {
+        @Getter
+        private final Point point = new Point();
         @Getter
         private int tileId;
 
@@ -151,10 +217,10 @@ public class CarePackage {
         public boolean setValueFromOutput(int value) {
             switch (outputIndex++) {
                 case 0:
-                    this.x = value;
+                    point.setX(value);
                     return false;
                 case 1:
-                    this.y = value;
+                    point.setY(value);
                     return false;
                 case 2:
                     this.tileId = value;
@@ -165,8 +231,6 @@ public class CarePackage {
             }
         }
 
-        public boolean containsScore() {
-            return x == -1 && y == 0;
-        }
+
     }
 }
