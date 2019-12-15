@@ -90,6 +90,7 @@ public class OxygenSystem {
 
         DiagnosticProgram.State state = new DiagnosticProgram.State(instructions);
 
+        int distance = 0;
         Move nextMove = Move.NORTH;
         state.addInput(nextMove.getInput());
 
@@ -104,10 +105,10 @@ public class OxygenSystem {
                 TileType tileType = TileType.getType(movementStatus);
                 if (!tileType.isBlocking()) {
                     droidPosition.setCoordinates(nextPosition);
-                    grid.addVisit(droidPosition);
+                    distance = grid.addVisit(droidPosition, ++distance);
                 }
                 if (tileType == TileType.OXYGEN_TANK) {
-                    System.out.println(" >: Found oxygen tank at: " + droidPosition);
+                    System.out.println(" >: Found oxygen tank at: " + droidPosition + ", distance: " + distance);
                 }
 
                 nextMove = getNextMove();
