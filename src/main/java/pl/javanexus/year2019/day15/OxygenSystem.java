@@ -8,6 +8,7 @@ import pl.javanexus.year2019.Point;
 import pl.javanexus.year2019.day5.DiagnosticProgram;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,36 @@ public class OxygenSystem {
     private final DiagnosticProgram program = new DiagnosticProgram();
     private final Grid grid = new Grid(WIDTH, HEIGHT, TileType.UNKNOWN.getStatus());
     private final Point droidPosition = new Point(WIDTH / 2, HEIGHT / 2);
+
+    public void populateGrid(int[][] values) {
+        for (int y = 0; y < values.length; y++) {
+            for (int x = 0; x < values[y].length; x++) {
+                grid.setTileType(x, y, values[y][x]);
+            }
+        }
+    }
+
+    public int fillWithOxygen(int x, int y) {
+        int t = 0;
+
+        List<Point> tilesWithOxygen = new LinkedList<>();
+        tilesWithOxygen.add(new Point(x, y));
+
+        while (!tilesWithOxygen.isEmpty()) {
+            List<Point> emptyTiles = new LinkedList<>();
+            for (Point emptyTile : tilesWithOxygen) {
+                grid.setTileType(emptyTile, TileType.OXYGEN_TANK.getStatus());
+                emptyTiles.addAll(grid.getAdjacentEmptyPanels(emptyTile));
+            }
+            tilesWithOxygen = emptyTiles;
+            t++;
+
+            System.out.println("Time: " + t);
+            grid.printGrid();
+        }
+
+        return t;
+    }
 
     public void findOxygenTank(long[] instructions) {
         grid.setTileType(droidPosition, TileType.EMPTY.getStatus());

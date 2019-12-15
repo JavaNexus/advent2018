@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import pl.javanexus.year2019.day15.OxygenSystem;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class Grid {
 
     private final Panel[][] grid;
@@ -27,12 +30,39 @@ public class Grid {
         }
     }
 
+    public List<Point> getAdjacentEmptyPanels(Point point) {
+        List<Point> emptyPanels = new LinkedList<>();
+
+        if (isEmpty(point.getX(), point.getY() - 1)) {//north
+            emptyPanels.add(new Point(point.getX(), point.getY() - 1));
+        }
+        if (isEmpty(point.getX(), point.getY() + 1)) {//south
+            emptyPanels.add(new Point(point.getX(), point.getY() + 1));
+        }
+        if (isEmpty(point.getX() - 1, point.getY())) {//west
+            emptyPanels.add(new Point(point.getX() - 1, point.getY()));
+        }
+        if (isEmpty(point.getX() + 1, point.getY())) {//east
+            emptyPanels.add(new Point(point.getX() + 1, point.getY()));
+        }
+
+        return emptyPanels;
+    }
+
+    private boolean isEmpty(int x, int y) {
+        return grid[y][x].getTileType() == OxygenSystem.TileType.EMPTY.getStatus();
+    }
+
     public int getTileType(Point position) {
         return getPanel(position).getTileType();
     }
 
     public void setTileType(Point position, int tileType) {
         getPanel(position).setTileType(tileType);
+    }
+
+    public void setTileType(int x, int y, int tileType) {
+        grid[y][x].setTileType(tileType);
     }
 
     public int getNumberOfVisits(Point position) {
