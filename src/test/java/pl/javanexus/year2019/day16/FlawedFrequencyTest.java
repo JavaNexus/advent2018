@@ -53,4 +53,17 @@ public class FlawedFrequencyTest {
         System.out.println(Arrays.toString(flawedFrequency.getCurrentPhase()));
         //11833188
     }
+
+    @Test
+    public void testLargeInput() throws IOException {
+        int[] input = inputReader.readIntArray("year2019/day16/input1.csv", "");
+
+        FlawedFrequency flawedFrequency = new FlawedFrequency(input, 10000);
+        flawedFrequency.calculateNextPhases(100);
+
+        int offset = 5976809;
+        int[] output = new int[8];
+        System.arraycopy(flawedFrequency.getCurrentPhase(), offset, output, 0, output.length);
+        System.out.println(Arrays.toString(output));
+    }
 }

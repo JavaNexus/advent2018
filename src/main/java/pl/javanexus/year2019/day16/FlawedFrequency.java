@@ -2,6 +2,8 @@ package pl.javanexus.year2019.day16;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+
 public class FlawedFrequency {
 
     private final int[] pattern = {0, 1, 0, -1};
@@ -9,11 +11,19 @@ public class FlawedFrequency {
     private int[] currentPhase;
 
     public FlawedFrequency(int[] inputPhase) {
-        this.currentPhase = inputPhase;
+        this(inputPhase, 1);
+    }
+
+    public FlawedFrequency(int[] inputPhase, int repeat) {
+        this.currentPhase = new int[inputPhase.length * repeat];
+        for (int i = 0; i < currentPhase.length; i+= inputPhase.length) {
+            System.arraycopy(inputPhase, 0, currentPhase, i, inputPhase.length);
+        }
     }
 
     public void calculateNextPhases(int numberOfPhases) {
         while (numberOfPhases > 0) {
+            System.out.println("Phase: " + numberOfPhases);
             calculateNextPhase();
             numberOfPhases--;
         }
