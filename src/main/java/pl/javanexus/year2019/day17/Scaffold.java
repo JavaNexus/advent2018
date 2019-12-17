@@ -17,12 +17,23 @@ public class Scaffold {
         program = new DiagnosticProgram();
     }
 
+    public void traverseScaffold(long[] instructions) {
+        DiagnosticProgram.State state = new DiagnosticProgram.State(instructions);
+        while (!state.isFinished()) {
+            program.execute(state);
+        }
+    }
+
     public void readInput(long[] instructions) {
         DiagnosticProgram.State state = new DiagnosticProgram.State(instructions);
         while (!state.isFinished()) {
             program.execute(state);
         }
 
+        populateGrid(state);
+    }
+
+    private void populateGrid(DiagnosticProgram.State state) {
         int x = 0, y = 0;
         grid[y] = new char[WIDTH];
         while (state.hasOutput()) {
