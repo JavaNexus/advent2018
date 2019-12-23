@@ -46,6 +46,7 @@ public class Tunnels {
     private final Map<String, Tile> keys = new TreeMap();
     private final Map<String, Tile> doors = new TreeMap();
     private Tile entrance;
+    private int minDistance = INFINITY;
 
     public Tunnels(List<String> lines) {
         this.grid = parseInput(lines);
@@ -53,46 +54,31 @@ public class Tunnels {
 
     public int collectKeys() {
         Map<String, Tile> remainingKeys = new TreeMap(keys);
-        return collectKeys(entrance, remainingKeys);
+        collectKeys(entrance, remainingKeys, 0);
+
+        return minDistance;
     }
 
-    public int collectKeys(Tile position, Map<String, Tile> remainingKeys) {
-        int distanceTraveled = 0;
-
-        while (!remainingKeys.isEmpty()) {
-            List<ReachableKey> reachableKeys = getReachableKeys(position, remainingKeys);
-            System.out.println("Reachable keys: " + reachableKeys);
-
-            ReachableKey nextKey = chooseKey(position, reachableKeys, remainingKeys);
-            System.out.println("Selected key: " + nextKey);
-
-//            openDoor(nextKey.getKey());
-//            remainingKeys.remove(nextKey.getKey());
-
-            distanceTraveled += nextKey.getDistance();
-            position = keys.get(nextKey.getKey());
-        }
-
-        System.out.println("Distance travelled: " + distanceTraveled + "\n");
-        return distanceTraveled;
-    }
-
-    private ReachableKey chooseKey(Tile position, List<ReachableKey> reachableKeys, Map<String, Tile> remainingKeys) {
-        int minDistance = INFINITY;
-        ReachableKey nextKey = null;
-
-        for (ReachableKey key : reachableKeys) {
-            Tile nextPosition = keys.get(key.getKey());
-            openDoor(key.getKey());
-            int distance = collectKeys(nextPosition, getOtherRemainingKeys(key, remainingKeys));
-            closeDoor(key.getKey());
-            if (distance < minDistance) {
-                minDistance = distance;
-                nextKey = key;
+    private int collectKeys(Tile position, Map<String, Tile> remainingKeys, int totalDistance) {
+        List<ReachableKey> reachableKeys = getReachableKeys(position, remainingKeys);
+        if (reachableKeys.isEmpty()) {
+            System.out.println("Collected all keys in: " + totalDistance + " steps");
+            if (totalDistance < minDistance) {
+                this.minDistance = totalDistance;
             }
         }
 
-        return nextKey;
+        for (ReachableKey reachableKey : reachableKeys) {
+            String nextKey = reachableKey.getKey();
+            Tile nextPosition = keys.get(nextKey);
+            Map<String, Tile> nextRemainingKeys = getOtherRemainingKeys(reachableKey, remainingKeys);
+
+            openDoor(nextKey);
+            collectKeys(nextPosition, nextRemainingKeys, totalDistance + reachableKey.getDistance());
+            closeDoor(nextKey);
+        }
+
+        return totalDistance;
     }
 
     private Map<String, Tile> getOtherRemainingKeys(ReachableKey currentKey, Map<String, Tile> remainingKeys) {
@@ -101,17 +87,6 @@ public class Tunnels {
 
         return otherRemainingKeys;
     }
-
-//    private Map<String, Tile> getOtherReachableKeys(ReachableKey currentKey, List<ReachableKey> reachableKeys) {
-//        Map<String, Tile> otherReachableKeys = new HashMap<>();
-//        for (ReachableKey reachableKey : reachableKeys) {
-//            if (!reachableKey.getKey().equals(currentKey.getKey())) {
-//                otherReachableKeys.put(reachableKey.getKey(), keys.get(reachableKey.getKey()));
-//            }
-//        }
-//
-//        return otherReachableKeys;
-//    }
 
     private void openDoor(String key) {
         Tile door = doors.get(getDoorSymbol(key));
