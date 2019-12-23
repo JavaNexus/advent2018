@@ -27,12 +27,21 @@ public class TunnelsTest {
 
     @Test
     public void testSample() throws IOException {
-        Tunnels tunnels =
-                new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_001.csv"));
-        assertEquals(8, tunnels.collectKeys());
+        Tunnels tunnels;
 
-        tunnels =
-                new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_002.csv"));
-        assertEquals(86, tunnels.collectKeys());
+//        tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_001.csv"));
+//        assertEquals(8, tunnels.collectKeys());
+
+//        tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_002.csv"));
+//        assertEquals(86, tunnels.collectKeys());
+
+        tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_003.csv"));
+        assertEquals(132, tunnels.collectKeys());
+
+//        tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_004.csv"));
+//        assertEquals(136, tunnels.collectKeys());
+
+//        tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_005.csv"));
+//        assertEquals(81, tunnels.collectKeys());
     }
 }

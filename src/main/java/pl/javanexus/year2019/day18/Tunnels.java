@@ -52,24 +52,66 @@ public class Tunnels {
     }
 
     public int collectKeys() {
-        int distanceTraveled = 0;
-        Tile position = entrance;
-
         Map<String, Tile> remainingKeys = new TreeMap(keys);
+        return collectKeys(entrance, remainingKeys);
+    }
+
+    public int collectKeys(Tile position, Map<String, Tile> remainingKeys) {
+        int distanceTraveled = 0;
+
         while (!remainingKeys.isEmpty()) {
-            Map.Entry<String, Integer> nextKey = getNextKey(position, remainingKeys);
-            System.out.println("Got key: " + nextKey);
+            List<ReachableKey> reachableKeys = getReachableKeys(position, remainingKeys);
+            System.out.println("Reachable keys: " + reachableKeys);
 
-            openDoor(nextKey.getKey());
-            remainingKeys.remove(nextKey.getKey());
+            ReachableKey nextKey = chooseKey(position, reachableKeys, remainingKeys);
+            System.out.println("Selected key: " + nextKey);
 
-            distanceTraveled += nextKey.getValue();
+//            openDoor(nextKey.getKey());
+//            remainingKeys.remove(nextKey.getKey());
+
+            distanceTraveled += nextKey.getDistance();
             position = keys.get(nextKey.getKey());
         }
 
         System.out.println("Distance travelled: " + distanceTraveled + "\n");
         return distanceTraveled;
     }
+
+    private ReachableKey chooseKey(Tile position, List<ReachableKey> reachableKeys, Map<String, Tile> remainingKeys) {
+        int minDistance = INFINITY;
+        ReachableKey nextKey = null;
+
+        for (ReachableKey key : reachableKeys) {
+            Tile nextPosition = keys.get(key.getKey());
+            openDoor(key.getKey());
+            int distance = collectKeys(nextPosition, getOtherRemainingKeys(key, remainingKeys));
+            closeDoor(key.getKey());
+            if (distance < minDistance) {
+                minDistance = distance;
+                nextKey = key;
+            }
+        }
+
+        return nextKey;
+    }
+
+    private Map<String, Tile> getOtherRemainingKeys(ReachableKey currentKey, Map<String, Tile> remainingKeys) {
+        Map<String, Tile> otherRemainingKeys = new HashMap<>(remainingKeys);
+        otherRemainingKeys.remove(currentKey.getKey());
+
+        return otherRemainingKeys;
+    }
+
+//    private Map<String, Tile> getOtherReachableKeys(ReachableKey currentKey, List<ReachableKey> reachableKeys) {
+//        Map<String, Tile> otherReachableKeys = new HashMap<>();
+//        for (ReachableKey reachableKey : reachableKeys) {
+//            if (!reachableKey.getKey().equals(currentKey.getKey())) {
+//                otherReachableKeys.put(reachableKey.getKey(), keys.get(reachableKey.getKey()));
+//            }
+//        }
+//
+//        return otherReachableKeys;
+//    }
 
     private void openDoor(String key) {
         Tile door = doors.get(getDoorSymbol(key));
@@ -78,22 +120,29 @@ public class Tunnels {
         }
     }
 
+    private void closeDoor(String key) {
+        Tile door = doors.get(getDoorSymbol(key));
+        if (door != null) {
+            door.setType(TileType.DOOR);
+        }
+    }
+
     private String getDoorSymbol(String keySymbol) {
         char door = (char) (keySymbol.charAt(0) + ('A' - 'a'));
         return String.valueOf(door);
     }
 
-    private Map.Entry<String, Integer> getNextKey(Tile position, Map<String, Tile> remainingKeys) {
-        Map.Entry<String, Integer> nextKey = null;
+    private List<ReachableKey> getReachableKeys(Tile position, Map<String, Tile> remainingKeys) {
+        List<ReachableKey> reachableKeys = new LinkedList<>();
 
         Map<String, Integer> distanceToEachKey = getDistanceToEachTile(position, remainingKeys.entrySet());
         for (Map.Entry<String, Integer> key : distanceToEachKey.entrySet()) {
-            if (nextKey == null || key.getValue() < nextKey.getValue()) {
-                nextKey = key;
+            if (key.getValue() < INFINITY) {
+                reachableKeys.add(new ReachableKey(key.getKey(), key.getValue()));
             }
         }
 
-        return nextKey;
+        return reachableKeys;
     }
 
     private Map<String, Integer> getDistanceToEachTile(Tile from, Set<Map.Entry<String, Tile>> destinations) {
@@ -197,8 +246,13 @@ public class Tunnels {
     }
 
     @Data
-    private static class Tile {
+    private static class ReachableKey {
+        private final String key;
+        private final int distance;
+    }
 
+    @Data
+    private static class Tile {
         private final int x, y;
 
         private TileType type;
