@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,13 +44,14 @@ public class Tunnels {
 
     private final Tile[][] grid;
     private final List<Tile> tiles = new LinkedList<>();
-    private final Map<String, Tile> keys = new TreeMap();
+    private final Map<String, Key> keys = new TreeMap();
     private final Map<String, Tile> doors = new TreeMap();
-    private Tile entrance;
+    private Key entrance;
     private int minDistance = INFINITY;
 
     public Tunnels(List<String> lines) {
         this.grid = parseInput(lines);
+        calculateDistancesBetweenKeys();
     }
 
     public int collectKeys() {
@@ -123,7 +125,8 @@ public class Tunnels {
     private Map<String, Integer> getDistanceToEachTile(Tile from, Set<Map.Entry<String, Tile>> destinations) {
         Map<String, Integer> distanceToEachKey = new HashMap<>();
         for (Map.Entry<String, Tile> destination : destinations) {
-            int distance = getDistance(from, destination.getValue());
+            int distance =
+                    getDistance(from, destination.getValue(), neighbor -> neighbor.isPassable() && !neighbor.isVisited());
             System.out.println("Distance to: " + destination.getKey() + " is: " + distance);
             distanceToEachKey.put(destination.getKey(), distance);
         }
@@ -131,7 +134,27 @@ public class Tunnels {
         return distanceToEachKey;
     }
 
-    private int getDistance(Tile from, Tile to) {
+    private Path getPathBetweenKeys(Tile from, Tile to) {
+        final Predicate<Tile> tileFilter =
+                tile -> tile.getType() == TileType.DOOR ? true : tile.isPassable();
+        Path path = new Path(getDistance(from, to, tileFilter));
+
+        Tile position = to;
+        while (!position.equals(from)) {
+            List<Tile> nextSteps =
+                    getNextSteps(position, tileFilter);
+            nextSteps.sort(Comparator.comparingInt(Tile::getDistance));
+
+            position = nextSteps.get(0);//nextSteps.size() - 1
+            if (position instanceof Key && !((Key)position).getSymbol().equals("@")) {
+                path.addKey(((Key) position).getSymbol());
+            }
+        }
+
+        return path;
+    }
+
+    private int getDistance(Tile from, Tile to, Predicate<Tile> filter) {
         List<Tile> unvisitedTiles = getUnvisitedTiles();
 
         Tile currentStep = from;
@@ -140,7 +163,7 @@ public class Tunnels {
             unvisitedTiles.sort(Comparator.comparingInt(Tile::getDistance));
             currentStep = unvisitedTiles.get(0);
 
-            List<Tile> nextSteps = getNextSteps(currentStep);
+            List<Tile> nextSteps = getNextSteps(currentStep, filter);
             for (Tile nextStep : nextSteps) {
                 int distanceThroughCurrentNode = currentStep.getDistance() + STEP;
                 if (distanceThroughCurrentNode < nextStep.getDistance()) {
@@ -166,12 +189,7 @@ public class Tunnels {
         return unvisited;
     }
 
-    /**
-     *
-     * @param tile
-     * @return passable adjacent unvisited tile
-     */
-    private List<Tile> getNextSteps(Tile tile) {
+    private List<Tile> getNextSteps(Tile tile, Predicate<Tile> filter) {
         return Stream.of(
                 getTile(tile.getX() - 1, tile.getY()),
                 getTile(tile.getX() + 1, tile.getY()),
@@ -179,7 +197,7 @@ public class Tunnels {
                 getTile(tile.getX(), tile.getY() + 1))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .filter(neighbor -> neighbor.isPassable() && !neighbor.isVisited())
+                .filter(filter)
                 .collect(Collectors.toList());
     }
 
@@ -199,25 +217,53 @@ public class Tunnels {
             String[] symbols = lines.get(y).split("");
             grid[y] = new Tile[symbols.length];
             for (int x = 0; x < grid[y].length; x++) {
-                TileType tileType = TileType.getType(symbols[x]);
-                Tile tile = new Tile(x, y, tileType);
+                Tile tile = createTile(x, y, symbols[x]);
                 grid[y][x] = tile;
                 tiles.add(tile);
-                switch (tileType) {
-                    case ENTRANCE:
-                        this.entrance = tile;
-                        break;
-                    case KEY:
-                        keys.put(symbols[x], tile);
-                        break;
-                    case DOOR:
-                        doors.put(symbols[x], tile);
-                        break;
-                }
             }
         }
 
         return grid;
+    }
+
+    private Tile createTile(int x, int y, String symbol) {
+        TileType tileType = TileType.getType(symbol);
+
+        Tile tile;
+        switch (tileType) {
+            case ENTRANCE:
+                this.entrance = new Key(x, y, symbol);
+                tile = entrance;
+                break;
+            case KEY:
+                Key key = new Key(x, y, symbol);
+                tile = key;
+                keys.put(symbol, key);
+                break;
+            case DOOR:
+                tile = new Tile(x, y, tileType);
+                doors.put(symbol, tile);
+                break;
+            default:
+                tile = new Tile(x, y, tileType);
+                break;
+        }
+
+        return tile;
+    }
+
+    private void calculateDistancesBetweenKeys() {
+        for (Map.Entry<String, Key> from : keys.entrySet()) {
+            Path path = getPathBetweenKeys(entrance, from.getValue());
+            entrance.addPath(from.getKey(), path);
+
+            for (Map.Entry<String, Key> to : keys.entrySet()) {
+                if (!from.getKey().equals(to.getKey())) {
+                    path = getPathBetweenKeys(from.getValue(), to.getValue());
+                    from.getValue().addPath(to.getKey(), path);
+                }
+            }
+        }
     }
 
     @Data
@@ -228,11 +274,16 @@ public class Tunnels {
 
     @Data
     private static class Tile {
+
         private final int x, y;
 
         private TileType type;
         private boolean visited;
         private int distance;
+
+        public Tile() {
+            this(-1, -1, TileType.EMPTY);
+        }
 
         public Tile(int x, int y, TileType type) {
             this.x = x;
@@ -242,6 +293,38 @@ public class Tunnels {
 
         public boolean isPassable() {
             return type.isPassable();
+        }
+    }
+
+    @Data
+    private static class Key extends Tile {
+
+        private final String symbol;
+        private final Map<String, Path> pathsToOtherKeys = new HashMap<>();
+
+        public Key(int x, int y, String symbol) {
+            super(x, y, TileType.KEY);
+            this.symbol = symbol;
+        }
+
+        //int distance, Collection<String> requiredKeys
+        public void addPath(String destination, Path path) {
+            pathsToOtherKeys.put(destination, path);//new Path(distance, requiredKeys)
+        }
+    }
+
+    @Data
+    private static class Path {
+
+        private final int distance;
+        private final Set<String> requiredKeys = new HashSet<>();
+
+        public void addKey(String key) {
+            requiredKeys.add(key);
+        }
+
+        public void addKeys(Collection<String> keys) {
+            requiredKeys.addAll(keys);
         }
     }
 }
