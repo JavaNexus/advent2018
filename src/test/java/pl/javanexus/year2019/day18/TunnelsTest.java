@@ -21,20 +21,21 @@ public class TunnelsTest {
     public void testCollectKeys() throws IOException {
         final Tunnels tunnels =
                 new Tunnels(inputReader.readStringValues("year2019/day18/input1.csv"));
-        int distance = tunnels.collectKeys();
+        int distance = tunnels.findShortestPath();
         System.out.println("Distance: " + distance);
     }
 
     @Test
     public void testSample002() throws IOException {
         Tunnels tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_002.csv"));
-        assertEquals(86, tunnels.collectKeys());
+        assertEquals(86, tunnels.findShortestPath());
     }
 
     @Test
     public void testSample004() throws IOException {
         Tunnels tunnels = new Tunnels(inputReader.readStringValues("year2019/day18/input_sample_004.csv"));
-        assertEquals(136, tunnels.collectKeys());
+        assertEquals(136, tunnels.findShortestPath());
+//        assertEquals(136, tunnels.collectKeys());
     }
 
     @Test

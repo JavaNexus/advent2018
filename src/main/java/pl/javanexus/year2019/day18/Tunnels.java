@@ -45,7 +45,7 @@ public class Tunnels {
     private final Tile[][] grid;
     private final List<Tile> tiles = new LinkedList<>();
     private final Map<String, Key> keys = new TreeMap();
-    private final Map<String, Tile> doors = new TreeMap();
+    private final Map<String, Door> doors = new TreeMap();
     private Key entrance;
     private int minDistance = INFINITY;
 
@@ -59,6 +59,40 @@ public class Tunnels {
         collectKeys(entrance, remainingKeys, 0);
 
         return minDistance;
+    }
+
+    public int findShortestPath() {
+        Set<String> collectedKeys = new HashSet<>();
+        followPath(entrance, collectedKeys, 0);
+
+        return minDistance;
+    }
+
+    private void followPath(Key key, Set<String> collectedKeys, int distance) {
+        Map<String, Path> allPaths = key.getPathsToOtherKeys();
+
+        List<Path> passablePaths = getPassablePathsToMissingKeys(allPaths.values(), collectedKeys);
+        if (passablePaths.isEmpty()) {
+            System.out.println("Collected all keys in: " + distance + " steps");
+            if (distance < minDistance) {
+                this.minDistance = distance;
+            }
+        }
+
+        for (Path path : passablePaths) {
+            Key nextKey = keys.get(path.getDestination());
+
+            collectedKeys.add(path.getDestination());
+            followPath(nextKey, collectedKeys, distance + path.getDistance());
+            collectedKeys.remove(path.getDestination());
+        }
+    }
+
+    private List<Path> getPassablePathsToMissingKeys(Collection<Path> allPaths, Set<String> collectedKeys) {
+        return allPaths.stream()
+                .filter(path -> !collectedKeys.contains(path.getDestination()))//get paths only to missing keys
+                .filter(path -> path.isPassable(collectedKeys))//get path that can be passed with collected keys
+                .collect(Collectors.toList());
     }
 
     private int collectKeys(Tile position, Map<String, Tile> remainingKeys, int totalDistance) {
@@ -134,10 +168,10 @@ public class Tunnels {
         return distanceToEachKey;
     }
 
-    private Path getPathBetweenKeys(Tile from, Tile to) {
+    private Path getPathBetweenKeys(Tile from, Tile to, String destinationKey) {
         final Predicate<Tile> tileFilter =
                 tile -> tile.getType() == TileType.DOOR ? true : tile.isPassable();
-        Path path = new Path(getDistance(from, to, tileFilter));
+        final Path path = new Path(getDistance(from, to, tileFilter), destinationKey);
 
         Tile position = to;
         while (!position.equals(from)) {
@@ -146,8 +180,9 @@ public class Tunnels {
             nextSteps.sort(Comparator.comparingInt(Tile::getDistance));
 
             position = nextSteps.get(0);//nextSteps.size() - 1
-            if (position instanceof Key && !((Key)position).getSymbol().equals("@")) {
-                path.addKey(((Key) position).getSymbol());
+            //position instanceof Key && !((Key)position).getSymbol().equals("@")
+            if (position instanceof Door) {
+                path.addKey(((Door) position).getMatchingKey());
             }
         }
 
@@ -241,8 +276,9 @@ public class Tunnels {
                 keys.put(symbol, key);
                 break;
             case DOOR:
-                tile = new Tile(x, y, tileType);
-                doors.put(symbol, tile);
+                Door door = new Door(x, y, symbol);
+                tile = door;
+                doors.put(symbol, door);
                 break;
             default:
                 tile = new Tile(x, y, tileType);
@@ -254,12 +290,12 @@ public class Tunnels {
 
     private void calculateDistancesBetweenKeys() {
         for (Map.Entry<String, Key> from : keys.entrySet()) {
-            Path path = getPathBetweenKeys(entrance, from.getValue());
+            Path path = getPathBetweenKeys(entrance, from.getValue(), from.getKey());
             entrance.addPath(from.getKey(), path);
 
             for (Map.Entry<String, Key> to : keys.entrySet()) {
                 if (!from.getKey().equals(to.getKey())) {
-                    path = getPathBetweenKeys(from.getValue(), to.getValue());
+                    path = getPathBetweenKeys(from.getValue(), to.getValue(), to.getKey());
                     from.getValue().addPath(to.getKey(), path);
                 }
             }
@@ -297,6 +333,22 @@ public class Tunnels {
     }
 
     @Data
+    private static class Door extends Tile {
+
+        private final String symbol;
+
+        public Door(int x, int y, String symbol) {
+            super(x, y, TileType.DOOR);
+            this.symbol = symbol;
+        }
+
+        public String getMatchingKey() {
+            char keySymbol = (char) (symbol.charAt(0) - ('A' - 'a'));
+            return String.valueOf(keySymbol);
+        }
+    }
+
+    @Data
     private static class Key extends Tile {
 
         private final String symbol;
@@ -317,6 +369,7 @@ public class Tunnels {
     private static class Path {
 
         private final int distance;
+        private final String destination;
         private final Set<String> requiredKeys = new HashSet<>();
 
         public void addKey(String key) {
@@ -325,6 +378,15 @@ public class Tunnels {
 
         public void addKeys(Collection<String> keys) {
             requiredKeys.addAll(keys);
+        }
+
+        public boolean isPassable(Set<String> collectedKeys) {
+            boolean hasAllRequiredKeys = true;
+            for (String requiredKey : requiredKeys) {
+                hasAllRequiredKeys &= collectedKeys.contains(requiredKey);
+            }
+
+            return hasAllRequiredKeys;
         }
     }
 }
