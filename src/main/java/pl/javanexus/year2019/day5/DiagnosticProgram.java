@@ -101,7 +101,7 @@ public class DiagnosticProgram {
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
                 long output = getFirstArgument(state, opcodeIndex, parameterModes);
                 state.setOutput(output);
-//                System.out.println(" >: OUTPUT: " + output);
+                System.out.println(" >: OUTPUT: " + output);
 
                 return opcodeIndex + getStep();
             }
