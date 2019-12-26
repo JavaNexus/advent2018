@@ -20,7 +20,7 @@ public class SlamShuffle {
                 return shuffledDeck;
             }
         },
-        CUT("cut [-0-9]+") {
+        CUT("cut ([-0-9]+)") {
             @Override
             public int[] shuffle(int[] deck, int numberOfCards) {
                 int[] shuffledDeck = new int[deck.length];
@@ -36,7 +36,7 @@ public class SlamShuffle {
                 return shuffledDeck;
             }
         },
-        INCREMENT("deal with increment [0-9]+") {
+        INCREMENT("deal with increment ([0-9]+)") {
             @Override
             public int[] shuffle(int[] deck, int param) {
                 int[] shuffledDeck = new int[deck.length];
@@ -61,7 +61,7 @@ public class SlamShuffle {
         }
 
         private static int getParam(Matcher matcher) {
-            return matcher.groupCount() > 2 ? Integer.parseInt(matcher.group(1)) : -1;
+            return matcher.groupCount() > 0 ? Integer.parseInt(matcher.group(1)) : -1;
         }
 
         private final Pattern pattern;
@@ -77,14 +77,24 @@ public class SlamShuffle {
         }
     }
 
-    public int[] shuffleDeck(List<String> instructions) {
-        int[] deck = createDeck(10007);
+    public int[] shuffleDeck(List<String> instructions, int deckSize) {
+        int[] deck = createDeck(deckSize);
 
         for (String instruction : instructions) {
-            Technique.parseInstruction(instruction);
+            System.out.println(instruction);
+            deck = Technique.parseInstruction(instruction).shuffle(deck);
         }
 
-        return null;
+        return deck;
+    }
+
+    public int findIndex(int[] deck, int value) {
+        for (int i = 0; i < deck.length; i++) {
+            if (deck[i] == value) {
+                return i;
+            }
+        }
+        throw new RuntimeException("Value: " + value + " not found in deck");
     }
 
     private int[] createDeck(int size) {
