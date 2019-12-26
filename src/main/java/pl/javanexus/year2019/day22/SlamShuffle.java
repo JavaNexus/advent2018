@@ -27,23 +27,24 @@ public class SlamShuffle {
         },
         CUT("cut ([-0-9]+)") {
             @Override
-            public int[] shuffle(int[] deck, int numberOfCards) {
+            public int[] shuffle(int[] deck, int cutSize) {
                 int[] shuffledDeck = new int[deck.length];
-                if (numberOfCards > 0) {
-                    System.arraycopy(deck, 0, shuffledDeck, shuffledDeck.length - numberOfCards, numberOfCards);
-                    System.arraycopy(deck, numberOfCards, shuffledDeck, 0, shuffledDeck.length - numberOfCards);
-                } else {
-                    System.arraycopy(deck, deck.length + numberOfCards, shuffledDeck, 0, Math.abs(numberOfCards));
-                    System.arraycopy(deck, 0, shuffledDeck, Math.abs(numberOfCards), deck.length + numberOfCards);
-                    //Math.abs(numberOfCards)
+                if (cutSize < 0) {
+                    cutSize = deck.length + cutSize;
                 }
+                System.arraycopy(deck, 0, shuffledDeck, shuffledDeck.length - cutSize, cutSize);
+                System.arraycopy(deck, cutSize, shuffledDeck, 0, shuffledDeck.length - cutSize);
 
                 return shuffledDeck;
             }
 
             @Override
             public int getNextIndex(int oldIndex, int deckSize, int cutSize) {
-                return 0;
+                if (cutSize < 0) {
+                    cutSize = deckSize + cutSize;
+                }
+
+                return oldIndex < cutSize ? deckSize - (cutSize - oldIndex) : oldIndex - cutSize;
             }
         },
         INCREMENT("deal with increment ([0-9]+)") {
@@ -60,7 +61,7 @@ public class SlamShuffle {
 
             @Override
             public int getNextIndex(int oldIndex, int deckSize, int increment) {
-                return 0;
+                return (oldIndex * increment) % deckSize;
             }
         };
 

@@ -1,10 +1,12 @@
 package pl.javanexus.year2019.day22;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import pl.javanexus.InputReader;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,7 +32,7 @@ public class SlamShuffleTest {
                 new int[] {9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
                 SlamShuffle.Technique.REVERSE.shuffle(DECK_10, -1));
         assertEquals(2,
-                SlamShuffle.Technique.REVERSE.getNextIndex(7, 10, ));
+                SlamShuffle.Technique.REVERSE.getNextIndex(7, 10, -1));
     }
 
     @Test
@@ -42,8 +44,14 @@ public class SlamShuffleTest {
                 new int[] {6, 7, 8, 9, 0, 1, 2, 3, 4, 5},
                 SlamShuffle.Technique.CUT.shuffle(DECK_10, -4));
 
+        assertEquals(4,
+                SlamShuffle.Technique.CUT.getNextIndex(7, 10, 3));
+        assertEquals(8,
+                SlamShuffle.Technique.CUT.getNextIndex(1, 10, 3));
         assertEquals(1,
-                SlamShuffle.Technique.REVERSE.getNextIndex(7, 10, ));
+                SlamShuffle.Technique.CUT.getNextIndex(7, 10, -4));
+        assertEquals(5,
+                SlamShuffle.Technique.CUT.getNextIndex(1, 10, -4));
     }
 
     @Test
@@ -51,6 +59,10 @@ public class SlamShuffleTest {
         assertArrayEquals(
                 new int[] {0, 7, 4, 1, 8, 5, 2, 9, 6, 3},
                 SlamShuffle.Technique.INCREMENT.shuffle(DECK_10, 3));
+        assertEquals(1,
+                SlamShuffle.Technique.INCREMENT.getNextIndex(7, 10, 3));
+        assertEquals(7,
+                SlamShuffle.Technique.INCREMENT.getNextIndex(9, 10, 3));
     }
 
     @Test
@@ -78,6 +90,15 @@ public class SlamShuffleTest {
         List<String> instructions =
                 inputReader.readStringValues("year2019/day22/input1.csv");
         int[] shuffledDeck = slamShuffle.shuffleDeck(instructions, 10007);
-        assertEquals(-1, slamShuffle.findIndex(shuffledDeck, 2019));
+        assertEquals(6638, slamShuffle.findIndex(shuffledDeck, 2019));
+    }
+
+    @Test
+    @Ignore
+    public void testLargeDeck() {
+        BigInteger shufflingCount = new BigInteger("101741582076661");
+        while (shufflingCount.compareTo(BigInteger.ZERO) > 0) {
+            shufflingCount = shufflingCount.subtract(BigInteger.ONE);
+        }
     }
 }
