@@ -87,7 +87,9 @@ public class DiagnosticProgram {
                 if (state.isInputAvailable()) {
                     long input = state.getInput();
                     setResult(state, opcodeIndex, parameterModes, input);
-                    System.out.println(" >: INPUT: " + input);
+                    if (state.isVerbose()) {
+                        System.out.println(" >: INPUT: " + input);
+                    }
 
                     return opcodeIndex + getStep();
                 } else {
@@ -101,7 +103,9 @@ public class DiagnosticProgram {
             int execute(State state, int opcodeIndex, ParameterMode[] parameterModes) {
                 long output = getFirstArgument(state, opcodeIndex, parameterModes);
                 state.setOutput(output);
-                System.out.println(" >: OUTPUT: " + output);
+                if (state.isVerbose()) {
+                    System.out.println(" >: OUTPUT: " + output);
+                }
 
                 return opcodeIndex + getStep();
             }
@@ -303,6 +307,7 @@ public class DiagnosticProgram {
         @Getter
         private long relativeBase = 0;
 
+        private boolean isVerbose = false;
         private boolean isFinished = false;
 
         private int instructionIndex = 0;
