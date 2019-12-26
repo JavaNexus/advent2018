@@ -19,6 +19,11 @@ public class SlamShuffle {
 
                 return shuffledDeck;
             }
+
+            @Override
+            public int getNextIndex(int oldIndex, int deckSize, int param) {
+                return deckSize - oldIndex - 1;
+            }
         },
         CUT("cut ([-0-9]+)") {
             @Override
@@ -35,6 +40,11 @@ public class SlamShuffle {
 
                 return shuffledDeck;
             }
+
+            @Override
+            public int getNextIndex(int oldIndex, int deckSize, int cutSize) {
+                return 0;
+            }
         },
         INCREMENT("deal with increment ([0-9]+)") {
             @Override
@@ -46,6 +56,11 @@ public class SlamShuffle {
                 }
 
                 return shuffledDeck;
+            }
+
+            @Override
+            public int getNextIndex(int oldIndex, int deckSize, int increment) {
+                return 0;
             }
         };
 
@@ -71,6 +86,8 @@ public class SlamShuffle {
         }
 
         public abstract int[] shuffle(int[] deck, int param);
+
+        public abstract int getNextIndex(int oldIndex, int deckSize, int param);
 
         private Matcher getMatcher(String instrucion) {
             return pattern.matcher(instrucion);

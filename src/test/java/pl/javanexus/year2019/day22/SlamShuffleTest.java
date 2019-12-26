@@ -6,7 +6,6 @@ import pl.javanexus.InputReader;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -27,8 +26,11 @@ public class SlamShuffleTest {
 
     @Test
     public void testDealIntoNewStack() {
-        int[] shuffledDeck = SlamShuffle.Technique.REVERSE.shuffle(DECK_10, -1);
-        assertArrayEquals(new int[] {9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, shuffledDeck);
+        assertArrayEquals(
+                new int[] {9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
+                SlamShuffle.Technique.REVERSE.shuffle(DECK_10, -1));
+        assertEquals(2,
+                SlamShuffle.Technique.REVERSE.getNextIndex(7, 10, ));
     }
 
     @Test
@@ -39,6 +41,9 @@ public class SlamShuffleTest {
         assertArrayEquals(
                 new int[] {6, 7, 8, 9, 0, 1, 2, 3, 4, 5},
                 SlamShuffle.Technique.CUT.shuffle(DECK_10, -4));
+
+        assertEquals(1,
+                SlamShuffle.Technique.REVERSE.getNextIndex(7, 10, ));
     }
 
     @Test
