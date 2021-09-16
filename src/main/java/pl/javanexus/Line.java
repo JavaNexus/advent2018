@@ -1,8 +1,8 @@
 package pl.javanexus;
 
 import lombok.Data;
-import pl.javanexus.day17.Point;
-import pl.javanexus.day17.SerializableToJson;
+import pl.javanexus.year2018.day17.Point;
+import pl.javanexus.year2018.day17.SerializableToJson;
 
 @Data
 public class Line implements SerializableToJson {
