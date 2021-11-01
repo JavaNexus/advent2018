@@ -24,13 +24,18 @@ public class ReportRepairTest {
 
         ReportRepair reportRepair = new ReportRepair();
         assertEquals(514579, reportRepair.findTwoValues(numbers, 2020));
+
+        //979 + 366 + 675 = 2020
+        assertEquals(241861950, reportRepair.findThreeValues(numbers, 2020));
     }
 
     @Test
     public void shouldFindSumInFile() throws IOException {
+        List<Integer> numbers = getNumbers("year2020/day1/input1.csv");
+
         ReportRepair reportRepair = new ReportRepair();
-        int result = reportRepair.findTwoValues(getNumbers("year2020/day1/input1.csv"), 2020);
-        System.out.println(result);
+        System.out.println(reportRepair.findTwoValues(numbers, 2020));
+        System.out.println(reportRepair.findThreeValues(numbers, 2020));
     }
 
     private List<Integer> getNumbers(String fileName) throws IOException {
