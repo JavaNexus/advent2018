@@ -16,11 +16,14 @@ public class PassportProcessingTest {
     public void shouldCountValidPassports() throws IOException {
         List<String> requiredFieldNames = List.of("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid");
 
-
         PassportProcessing passportProcessing = new PassportProcessing(requiredFieldNames);
+        assertEquals(0,
+                passportProcessing.countValidPassports(getPassports("year2020/day4/input_invalid.txt")));
+        assertEquals(4,
+                passportProcessing.countValidPassports(getPassports("year2020/day4/input_valid.txt")));
         assertEquals(2,
                 passportProcessing.countValidPassports(getPassports("year2020/day4/input1.txt")));
-        assertEquals(260,
+        assertEquals(153,
                 passportProcessing.countValidPassports(getPassports("year2020/day4/input2.txt")));
     }
 

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class PassportParser {
 
-    private final Pattern pattern = Pattern.compile("(.+):(.+)");
+    private final Pattern fieldPattern = Pattern.compile("(.+):(.+)");
 
     public List<Passport> readPassports(InputStream inputStream) throws IOException {
         final List<Passport> passports = new LinkedList<>();
@@ -28,7 +28,7 @@ public class PassportParser {
                 passports.add(passport);
             }
             for (String fieldValue : line.split(" ")) {
-                Matcher matcher = pattern.matcher(fieldValue);
+                Matcher matcher = fieldPattern.matcher(fieldValue);
                 if (matcher.find()) {
                     passport.addField(matcher.group(1), matcher.group(2));
                 }
