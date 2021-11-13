@@ -5,7 +5,6 @@ import org.junit.Test;
 import pl.javanexus.InputReader;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -23,16 +22,18 @@ public class HandyHaversacksTest {
 
     @Test
     public void shouldCountParentBags() throws IOException {
-        HandyHaversacks handyHaversacks = getHandyHaversacks("year2020/day7/input1.txt");
-        Collection<Bag> parentBags = handyHaversacks.getParentBags("shiny gold");
-        assertEquals(4, parentBags.size());
+        assertEquals(4,
+                getHandyHaversacks("year2020/day7/input1.txt").getParentBags("shiny gold").size());
+        assertEquals(185,
+                getHandyHaversacks("year2020/day7/input2.txt").getParentBags("shiny gold").size());
     }
 
     @Test
-    public void shouldCountParentBagsFromInput() throws IOException {
-        HandyHaversacks handyHaversacks = getHandyHaversacks("year2020/day7/input2.txt");
-        Collection<Bag> parentBags = handyHaversacks.getParentBags("shiny gold");
-        assertEquals(185, parentBags.size());
+    public void shouldCountChildrenBags() throws IOException {
+        assertEquals(32,
+                getHandyHaversacks("year2020/day7/input1.txt").countChildrenBags("shiny gold"));
+        assertEquals(89084,
+                getHandyHaversacks("year2020/day7/input2.txt").countChildrenBags("shiny gold"));
     }
 
     private HandyHaversacks getHandyHaversacks(String fileName) throws IOException {

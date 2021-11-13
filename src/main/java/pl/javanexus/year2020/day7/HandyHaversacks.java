@@ -13,13 +13,8 @@ public class HandyHaversacks {
     private final Map<String, Bag> bags;
 
     public Collection<Bag> getParentBags(String bagColor) {
-        Bag bag = bags.get(bagColor);
-        if (bag == null) {
-            throw new IllegalArgumentException(String.format("Bag %s not found", bagColor));
-        }
-
         Set<Bag> parentBags = new HashSet<>();
-        addParents(bag, parentBags);
+        addParents(getBag(bagColor), parentBags);
 
         return parentBags;
     }
@@ -29,5 +24,27 @@ public class HandyHaversacks {
             parentBags.add(parent.getBag());
             addParents(parent.getBag(), parentBags);
         }
+    }
+
+    public int countChildrenBags(String bagColor) {
+        return countChildren(getBag(bagColor));
+    }
+
+    private int countChildren(Bag bag) {
+        int numberOfBags = 0;
+        for (Content child : bag.getChildBags()) {
+            numberOfBags += child.getNumberOfBags() * (1 + countChildren(child.getBag()));
+        }
+
+        return numberOfBags;
+    }
+
+    private Bag getBag(String bagColor) {
+        Bag bag = bags.get(bagColor);
+        if (bag == null) {
+            throw new IllegalArgumentException(String.format("Bag %s not found", bagColor));
+        }
+
+        return bag;
     }
 }
