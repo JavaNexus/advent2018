@@ -5,7 +5,6 @@ import org.junit.Test;
 import pl.javanexus.InputReader;
 
 import java.io.IOException;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,5 +25,15 @@ public class HandheldHaltingTest {
                 handheldHalting.executeSingleLoop(inputReader.readStringValues("year2020/day8/input1.txt")));
         assertEquals(1939,
                 handheldHalting.executeSingleLoop(inputReader.readStringValues("year2020/day8/input2.txt")));
+    }
+
+    @Test
+    public void shouldFindCorruptedInstruction() throws IOException {
+        assertEquals(8,
+                handheldHalting.findCorruptedInstruction(
+                        inputReader.readStringValues("year2020/day8/input1.txt")));
+        assertEquals(2212,
+                handheldHalting.findCorruptedInstruction(
+                        inputReader.readStringValues("year2020/day8/input2.txt")));
     }
 }

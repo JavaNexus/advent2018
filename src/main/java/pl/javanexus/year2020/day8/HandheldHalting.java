@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -17,14 +19,13 @@ public class HandheldHalting {
     enum Operation {
         ACC("acc", (argument, context) -> {
             context.accumulate(argument);
-            context.updateNextInstructionIndex(1);
-        }),
+        }, (argument) -> 1),
         JMP("jmp", (argument, context) -> {
-            context.updateNextInstructionIndex(argument);
-        }),
+            //no-op
+        }, (argument) -> argument),
         NOP("nop", (argument, context) -> {
-            context.updateNextInstructionIndex(1);
-        }),
+            //no-op
+        }, (argument) -> 1),
         ;
 
         private static final Map<String, Operation> operations = Arrays.stream(Operation.values())
@@ -33,10 +34,14 @@ public class HandheldHalting {
         @Getter
         private final String operationName;
         private final BiConsumer<Integer, Context> action;
+        @Getter
+        private final Function<Integer, Integer> nextInstructionOffsetProvider;
 
-        Operation(String operation, BiConsumer<Integer, Context> foo) {
+        Operation(String operation, BiConsumer<Integer, Context> action,
+                  Function<Integer, Integer> nextInstructionOffsetProvider) {
             this.operationName = operation;
-            this.action = foo;
+            this.action = action;
+            this.nextInstructionOffsetProvider = nextInstructionOffsetProvider;
         }
 
         public void execute(int argument, Context context) {
@@ -69,12 +74,19 @@ public class HandheldHalting {
 
         private final Operation operation;
         private final int argument;
+        private final boolean changed;
 
         private int numberOfExecutions;
 
         public void execute(Context context) {
             numberOfExecutions++;
             operation.execute(argument, context);
+            context.updateNextInstructionIndex(operation.getNextInstructionOffsetProvider().apply(argument));
+        }
+
+        public void revert(Context context) {
+            operation.execute(-argument, context);
+            context.updateNextInstructionIndex(-operation.getNextInstructionOffsetProvider().apply(argument));
         }
 
         public boolean hasBeenExecuted() {
@@ -97,13 +109,71 @@ public class HandheldHalting {
         return context.getAccumulator();
     }
 
+    public int findCorruptedInstruction(List<String> lines) {
+        final Deque<Instruction> executed = new LinkedList<>();
+
+        final Context context = new Context();
+        final Instruction[] instructions = parseInstructions(lines);
+
+        boolean hasChangedInstruction = false;
+
+        Instruction instruction;
+        do {
+            instruction = instructions[context.getNextInstruction()];
+            if (instruction.hasBeenExecuted()) {
+                instruction =
+                        changeOperation(getLastPossibleCorruptedInstruction(executed, context, hasChangedInstruction));
+                hasChangedInstruction = true;
+            }
+            instruction.execute(context);
+            executed.push(instruction);
+        } while (context.getNextInstruction() < instructions.length);
+
+        return context.getAccumulator();
+    }
+
+    private Instruction changeOperation(Instruction instruction) {
+        if (instruction.getOperation() == Operation.NOP) {
+            return new Instruction(Operation.JMP, instruction.getArgument(), true);
+        } else if (instruction.getOperation() == Operation.JMP) {
+            return new Instruction(Operation.NOP, instruction.getArgument(), true);
+        } else {
+            throw new IllegalArgumentException("Operation can't be converted: " + instruction.getOperation());
+        }
+    }
+
+    private Instruction getLastPossibleCorruptedInstruction(Deque<Instruction> executed, Context context,
+                                                            boolean hasChangedInstruction) {
+        Instruction instruction;
+        if (hasChangedInstruction) {
+            do {
+                instruction = executed.remove();
+                instruction.revert(context);
+            } while(!instruction.isChanged());
+        }
+
+        do {
+            instruction = executed.remove();
+            instruction.revert(context);
+        } while(!isCorruptibleOperation(instruction.getOperation()));
+
+        return instruction;
+    }
+
+    private boolean isCorruptibleOperation(Operation operation) {
+        return operation == Operation.JMP || operation == Operation.NOP;
+    }
+
     private Instruction[] parseInstructions(List<String> lines) {
         return lines.stream().map(instruction -> {
             Matcher matcher = instructionPattern.matcher(instruction);
             if (matcher.find()) {
-                return new Instruction(Operation.getOperation(matcher.group(1)), Integer.parseInt(matcher.group(2)));
+                return new Instruction(
+                        Operation.getOperation(matcher.group(1)),
+                        Integer.parseInt(matcher.group(2)),
+                        false);
             }
             throw new IllegalArgumentException("Unknown instruction: " + instruction);
-        }).toArray(size -> new Instruction[size]);
+        }).toArray(Instruction[]::new);
     }
 }
