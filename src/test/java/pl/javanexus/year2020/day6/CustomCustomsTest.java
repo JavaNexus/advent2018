@@ -23,7 +23,7 @@ public class CustomCustomsTest {
     public void shouldCountUnique() throws IOException {
         assertEquals(11,
                 customCustoms.sumUniqueAnswers(inputReader.readStringValues("year2020/day6/input1.txt")));
-        assertEquals(0,
+        assertEquals(7110,
                 customCustoms.sumUniqueAnswers(inputReader.readStringValues("year2020/day6/input2.txt")));
     }
 
