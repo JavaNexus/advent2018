@@ -1,7 +1,6 @@
 package pl.javanexus.year2022.day3;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import pl.javanexus.InputReader;
@@ -28,6 +27,17 @@ public class RucksackReorganizationTest {
     public void shouldCountDuplicateItemsPriorities(String fileName, int expectedScore) {
         assertThat(
                 rucksackReorganization.getSumOfDuplicateItemTypesPriorites(inputReader.getLinesStream(fileName)),
+                is(expectedScore));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "year2022/day3/input1.txt, 70",
+            "year2022/day3/input2.txt, 2609"
+    })
+    void shouldFineBadgeItemType(String fileName, int expectedScore) {
+        assertThat(
+                rucksackReorganization.findGroupsBadges(inputReader.getLinesStream(fileName)),
                 is(expectedScore));
     }
 }
