@@ -3,11 +3,7 @@ package pl.javanexus.year2022.day2;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.stream.Stream;
+import pl.javanexus.InputReader;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -15,10 +11,12 @@ import static org.hamcrest.Matchers.is;
 public class RockPaperScissorsTest {
 
     private RockPaperScissors rockPaperScissors;
+    private InputReader inputReader;
 
     @BeforeEach
     void setUp() {
         rockPaperScissors = new RockPaperScissors();
+        inputReader = new InputReader();
     }
 
     @ParameterizedTest
@@ -27,7 +25,7 @@ public class RockPaperScissorsTest {
             "year2022/day2/input2.txt, 11767"
     })
     public void shouldCalculateScore(String fileName, int expectedScore) {
-        assertThat(rockPaperScissors.calculateScore(getStream(fileName)), is(expectedScore));
+        assertThat(rockPaperScissors.calculateScore(inputReader.getLinesStream(fileName)), is(expectedScore));
     }
 
     @ParameterizedTest
@@ -36,14 +34,7 @@ public class RockPaperScissorsTest {
             "year2022/day2/input2.txt, 13886"
     })
     public void shouldSelectPlayerSymbol(String fileName, int expectedResult) {
-        assertThat(rockPaperScissors.calculateScoreWithSelectedSymbol(getStream(fileName)), is(expectedResult));
-    }
-
-    private Stream<String> getStream(String fileName) {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
-        if (inputStream == null) {
-            throw new IllegalArgumentException("Couldn't fiond file: " + fileName);
-        }
-        return new BufferedReader(new InputStreamReader(inputStream)).lines();
+        assertThat(rockPaperScissors.calculateScoreWithSelectedSymbol(inputReader.getLinesStream(fileName)),
+                is(expectedResult));
     }
 }
