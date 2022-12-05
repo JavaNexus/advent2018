@@ -10,12 +10,10 @@ import static org.hamcrest.Matchers.is;
 public class SupplyStacksTest {
 
     private InputReader inputReader;
-    private SupplyStacks supplyStacks;
 
     @BeforeEach
     void setUp() {
         inputReader = new InputReader();
-        supplyStacks = new SupplyStacks();
     }
 
     @ParameterizedTest
@@ -23,7 +21,18 @@ public class SupplyStacksTest {
             "year2022/day5/input1.txt, CMZ",
             "year2022/day5/input2.txt, SHMSDGZVC"
     })
-    public void test(String fileName, String expectedTopCrates) {
+    public void shouldRearrangeCratesOneAtATime(String fileName, String expectedTopCrates) {
+        SupplyStacks supplyStacks = new SupplyStacks(SupplyStacks.CraneType.CM_9000);
+        assertThat(supplyStacks.rearrangeCrates(inputReader.getLinesStream(fileName)), is(expectedTopCrates));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "year2022/day5/input1.txt, MCD",
+            "year2022/day5/input2.txt, VRZGHDFBQ"
+    })
+    public void shouldRearrangeCratesMultipleAtATime(String fileName, String expectedTopCrates) {
+        SupplyStacks supplyStacks = new SupplyStacks(SupplyStacks.CraneType.CM_9001);
         assertThat(supplyStacks.rearrangeCrates(inputReader.getLinesStream(fileName)), is(expectedTopCrates));
     }
 }

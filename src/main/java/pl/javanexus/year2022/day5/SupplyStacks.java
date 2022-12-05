@@ -13,8 +13,39 @@ import java.util.stream.Stream;
 
 public class SupplyStacks {
 
+    enum CraneType {
+        CM_9000 {
+            @Override
+            public void moveCrates(Deque<String> from, Deque<String> to, int count) {
+                while (count-- > 0) {
+                    to.push(from.poll());
+                }
+            }
+        },
+        CM_9001 {
+            @Override
+            public void moveCrates(Deque<String> from, Deque<String> to, int count) {
+                Deque<String> stack = new ArrayDeque<>();
+                for (int i = count; i > 0; i--) {
+                    stack.push(from.poll());
+                }
+                for (int i = count; i > 0; i--) {
+                    to.push(stack.poll());
+                }
+            }
+        },
+        ;
+        public abstract void moveCrates(Deque<String> from, Deque<String> to, int count);
+    }
+
     private final Pattern stacksPattern = Pattern.compile("\\[([A-Z])\\]| {3} ?");
     private final Pattern movePattern = Pattern.compile("move (\\d+) from (\\d+) to (\\d+)");
+
+    private final CraneType craneType;
+
+    public SupplyStacks(CraneType craneType) {
+        this.craneType = craneType;
+    }
 
     public String rearrangeCrates(Stream<String> input) {
         Iterator<String> iterator = input.iterator();
@@ -60,9 +91,7 @@ public class SupplyStacks {
                 int count = Integer.parseInt(matcher.group(1));
                 int from = Integer.parseInt(matcher.group(2)) - 1;
                 int to = Integer.parseInt(matcher.group(3)) - 1;
-                while (count-- > 0) {
-                    stacks.get(to).push(stacks.get(from).poll());
-                }
+                craneType.moveCrates(stacks.get(from), stacks.get(to), count);
             } else {
                 throw new IllegalArgumentException("Unexpected line: " + line);
             }
