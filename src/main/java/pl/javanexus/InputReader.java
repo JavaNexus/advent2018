@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class InputReader {
@@ -37,6 +38,10 @@ public class InputReader {
             throw new IllegalArgumentException("Couldn't find file: " + fileName);
         }
         return new BufferedReader(new InputStreamReader(inputStream)).lines();
+    }
+
+    public String readStringValue(String fileName) {
+        return getLinesStream(fileName).collect(Collectors.joining());
     }
 
     public List<String> readStringValues(String fileName) throws IOException {
