@@ -1,10 +1,9 @@
-package pl.javanexus.year2022;
+package pl.javanexus.year2022.day7;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import pl.javanexus.InputReader;
-import pl.javanexus.year2022.day7.NoSpaceLeftOnDevice;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
