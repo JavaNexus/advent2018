@@ -32,6 +32,14 @@ public class InputReader {
         throw new RuntimeException("File is empty");
     }
 
+    public Integer[][] getIntMatrix(String fileName) {
+        return getLinesStream(fileName)
+                .map(row -> Arrays.stream(row.split(""))
+                        .map(Integer::parseInt)
+                        .toArray(Integer[]::new))
+                .toArray(length -> new Integer[length][1]);
+    }
+
     public Stream<String> getLinesStream(String fileName) {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
         if (inputStream == null) {
